@@ -1,0 +1,1 @@
+from .intervenor_view import IntervenorViewSet

@@ -1,0 +1,1 @@
+export { default as BedsPage } from "./pages/BedsPage"
