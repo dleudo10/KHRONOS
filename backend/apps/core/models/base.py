@@ -20,14 +20,18 @@ class BaseModel(models.Model):
     
     history = HistoricalRecords(inherit=True)
     
-    def soft_delete(self, user=None):
-        self.is_active = False
-        self.save(update_fields=["is_active", "updated_at",])
-        
-    def restore(self, user=None):
-        self.is_active = True
-        self.save(update_fields=["is_active", "updated_at",])
-    
+    def set_active(self, value: bool, user=None) -> bool:
+        """Único punto que cambia el estado. Devuelve True si hubo cambio."""
+        if self.is_active == value:
+            return False
 
+        self.is_active = value
+        # self._change_reason = "Activación" if value else "Desactivación"
+        # if user is not None:
+        #     self._history_user = user  # simple_history registra quién lo hizo
+
+        self.save(update_fields=["is_active", "updated_at"])
+        return True
+    
     class Meta:
         abstract = True

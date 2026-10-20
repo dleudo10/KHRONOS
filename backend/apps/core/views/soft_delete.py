@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from django.db import transaction
 from rest_framework import mixins
 
-
 class SoftDeleteViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -13,29 +12,17 @@ class SoftDeleteViewSet(
     mixins.DestroyModelMixin,
     BaseViewSet,
 ):
+    @action(detail=True, methods=["patch"], url_path="status")
     @transaction.atomic
-    def perform_destroy(self, instance):
- 
-        self._call_hook("before_destroy", instance)
-
-        instance.soft_delete(
-            user=self.request.user
-        )
-
-        self._call_hook("after_destroy", instance)
-        
-    @transaction.atomic
-    @action(detail=True, methods=["patch"])
-    def restore(self, request, pk=None):
-
+    def change_status(self, request, pk=None):
         instance = self.get_object()
 
-        self._call_hook("before_restore", instance)
+        requested = request.data.get("is_active")
+        new_state = not instance.is_active if requested is None else bool(requested)
 
-        instance.restore(
-            user=request.user
-        )
+        if instance.is_active != new_state:
+            self._call_hook("before_status_change", instance, new_state)
+            instance.set_active(new_state, user=request.user)
+            self._call_hook("after_status_change", instance, new_state)
 
-        self._call_hook("after_restore", instance)
-
-        return Response()
+        return Response(self.get_serializer(instance).data)

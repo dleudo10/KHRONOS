@@ -9,6 +9,9 @@ class ResponseWrapperMixin:
         "partial_update": "Registro actualizado exitosamente.",
         "destroy": "Registro eliminado exitosamente.",
         "restore": "Registro restaurado correctamente.",
+        "summary": "Resumen obtenido exitosamente.",
+        "memberships": "Miembros obtenidos exitosamente",
+        "change_status": "Estado actualizado correctamente.",
     }
 
     def should_wrap_response(self):
@@ -54,7 +57,7 @@ class ResponseWrapperMixin:
             }
             return response
 
-        if isinstance(response.data, dict):
+        if isinstance(response.data, (dict, list)):
             message = self.success_messages.get(
                 getattr(self, "action", ""),
                 "Operación realizada correctamente.",
