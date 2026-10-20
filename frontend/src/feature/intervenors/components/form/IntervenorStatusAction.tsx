@@ -1,20 +1,18 @@
-import Icon from "../../../components/ui/Icon";
+import Icon from "../../../../components/ui/Icon";
 
-type TeamStatusActionProps = {
+type IntervenorStatusActionProps = {
     isActive: boolean;
     loading?: boolean;
     onClick: () => void;
 };
 
-export function TeamStatusAction({ isActive, loading = false, onClick }: TeamStatusActionProps) {
+export function IntervenorStatusAction({ isActive, loading = false, onClick }: IntervenorStatusActionProps) {
     const tone = isActive ? "danger" : "success";
 
     return (
         <div className={`ivr-status-action is-${tone}`}>
             <div>
-                <strong>
-                    {isActive ? "Desactivar interventor" : "Activar interventor"}
-                </strong>
+                <strong>{isActive ? "Desactivar interventor" : "Activar interventor"}</strong>
                 <span>
                     {isActive
                         ? "Un equipo inactivo deja de recibir tareas nuevas. Sus usuarios asociados y su historial se conservan, y podrás reactivarlo cuando quieras."
@@ -29,13 +27,7 @@ export function TeamStatusAction({ isActive, loading = false, onClick }: TeamSta
                 disabled={loading}
             >
                 <Icon name={isActive ? "pause" : "play"} size={15} />
-                <span>
-                    {loading
-                        ? "Actualizando..."
-                        : isActive
-                            ? "Desactivar"
-                            : "Activar"}
-                </span>
+                <span>{loading ? "Actualizando..." : isActive ? "Desactivar" : "Activar"}</span>
             </button>
         </div>
     );

@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { changeIntervenorStatus } from "../services/intervenors.api";
+import { assertSuccess } from "../utils/assertSuccess";
+import { intervenorKeys } from "./queryKeys";
 
 type ChangeStatusArguments = {
     id: number;
@@ -10,15 +12,8 @@ export const useChangeIntervenorStatus = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, isActive }: ChangeStatusArguments) =>
-            changeIntervenorStatus(id, isActive),
-
-        onSuccess: response => {
-            if (response?.success) {
-                return queryClient.invalidateQueries({
-                    queryKey: ["intervenors"],
-                });
-            }
-        },
+        mutationFn: async ({ id, isActive }: ChangeStatusArguments) =>
+            assertSuccess(await changeIntervenorStatus(id, isActive)),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: intervenorKeys.all }),
     });
 };

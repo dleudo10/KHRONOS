@@ -1,8 +1,5 @@
 from rest_framework import serializers
-from apps.intervenors.models import (
-    Intervenor
-    
-)
+from apps.intervenors.models import Intervenor
 
 class IntervenorSerializer(serializers.ModelSerializer):
     class Meta:

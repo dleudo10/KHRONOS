@@ -13,7 +13,7 @@ from ..serializers import (
     IntervenorMembershipsSerializer
 )
 
-from ..repositories.intervenor_repository import IntervenorRepository
+from ..repositories.intervenor_repository import IntervenorRepository 
 
 class IntervenorViewSet(SoftDeleteViewSet):
     queryset = Intervenor.objects.all()
@@ -26,17 +26,14 @@ class IntervenorViewSet(SoftDeleteViewSet):
     
     permission_map = {
         "list": "intervenors.view_intervenor",
-    #     "retrieve": "intervenors.view_intervenor",
+        "retrieve": "intervenors.view_intervenor",
         "create": "intervenors.create_intervenor",
         "update": "intervenors.change_intervenor",
         "partial_update": "intervenors.change_intervenor",
-    #     "destroy": "intervenors.change_intervenor",
-    #     "restore": "intervenors.change_intervenor",
+        "change_status": "intervenors.change_intervenor",
     #     "members": "intervenors.view_intervenor",
     #     "add_member": "intervenors.manage_members",
     #     "member_detail": "intervenors.manage_members",
-    #     "leader": "intervenors.manage_leader",
-    #     "metrics": "intervenors.view_metrics",
         "summary": "intervenors.view_intervenor",
         "memberships": "intervenors.view_intervenor",
     }    

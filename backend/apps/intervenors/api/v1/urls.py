@@ -5,6 +5,5 @@ from .views import (
 
 router = DefaultRouter()
 router.register('intervenors', IntervenorViewSet, basename='intervenor')
-# router.register('list-intervenors', IntervenorListViewSet, basename='list-intervenor')
 
 urlpatterns = router.urls

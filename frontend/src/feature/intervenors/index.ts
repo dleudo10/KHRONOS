@@ -1,1 +1,1 @@
-export { default as IntervenorsPage } from "./pages/IntervenorsPage"
+export { default as IntervenorsPage } from "./pages/IntervenorsPage";
