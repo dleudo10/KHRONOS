@@ -90,7 +90,7 @@ export function MembersPanel({ intervenor }: MembersPanelProps) {
     // 2. Nombrar / quitar líder
     const handleToggleLeader = (member: IntervenorMember) =>
         runAction(
-            () => setLeader.mutateAsync(member.is_leader ? null : member.id),
+            () => setLeader.mutateAsync({membership_id: member.id, is_leader: member.is_leader ? false : true}),
             "No se pudo actualizar el liderazgo.",
         );
 
@@ -158,7 +158,7 @@ export function MembersPanel({ intervenor }: MembersPanelProps) {
                         onClearFilters={clearFilters}
                     />
                 ) : (
-                    <MembersTable members={members} onOpenMenu={menu.toggle} />
+                    <MembersTable members={members} onOpenMenu={menu.toggle} /> 
                 )}
 
                 {total > 0 && (
@@ -180,8 +180,14 @@ export function MembersPanel({ intervenor }: MembersPanelProps) {
                     top={menu.anchor.top}
                     right={menu.anchor.right}
                     onClose={menu.close}
-                    onToggleLeader={() => { menu.close(); handleToggleLeader(menuMember); }}
-                    onRemove={() => { menu.close(); setMemberToRemove(menuMember); }}
+                    onToggleLeader={() => { 
+                        menu.close(); 
+                        handleToggleLeader(menuMember); 
+                    }}
+                    onRemove={() => { 
+                        menu.close(); 
+                        setMemberToRemove(menuMember); 
+                    }}
                 />
             )}
 
@@ -196,7 +202,7 @@ export function MembersPanel({ intervenor }: MembersPanelProps) {
             {memberToRemove && (
                 <ConfirmDialog
                     title="¿Quitar usuario del equipo?"
-                    text={`${memberToRemove.user.name} dejará de pertenecer a ${intervenor.name} y no recibirá sus tareas.`}
+                    text={`${memberToRemove.user.external_id} dejará de pertenecer a ${intervenor.name} y no recibirá sus tareas.`}
                     confirmLabel="Quitar del equipo"
                     onCancel={() => setMemberToRemove(null)}
                     onConfirm={handleRemove}

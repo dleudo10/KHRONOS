@@ -138,6 +138,6 @@ OLIMPO_APP_CONTEXT_URL = os.environ.get(
     'OLIMPO_APP_CONTEXT_URL',
     'http://localhost:8000/api/v1/apps/me/',
 )
-
+OLIMPO_USERS_LOOKUP_URL = 'http://localhost:8000/api/v1/application-users/'
 APPLICATION_ROLES_CLAIM = 'rol'
 APPLICATION_ADMIN_ROLE_CODE = os.environ.get('APPLICATION_ADMIN_ROLE_CODE', 'khronos_admin')

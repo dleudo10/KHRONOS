@@ -11,8 +11,12 @@ class OIDCPrincipal:
     def __init__(self, context):
         self.context = context
         self.id = context["sub"]
-        self.username = context.get("external_id") or context["sub"]
+        self.sub = context["sub"]
+        self.external_id = context.get("external_id")
+        self.username = self.external_id or self.sub
         self.full_name = context.get("full_name") or self.username
+        self.email = context.get("email")
+
         self.is_authenticated = True
         self.is_anonymous = False
         

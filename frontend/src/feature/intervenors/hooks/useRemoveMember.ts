@@ -7,8 +7,8 @@ export const useRemoveMember = (intervenorId: number) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (memberId: number) =>
-            assertSuccess(await removeMember(intervenorId, memberId)),
+        mutationFn: async (membership_id: number) =>
+            assertSuccess(await removeMember(intervenorId = intervenorId, membership_id = membership_id)),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: intervenorKeys.all }),
     });
 };

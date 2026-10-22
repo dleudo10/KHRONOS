@@ -1,17 +1,31 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getAssignableUsers } from "../services/members.api";
 import { intervenorKeys } from "./queryKeys";
+import type { QueryProps } from "../../../types/services.types";
 
-/** Usuarios que todavía no pertenecen al interventor (candidatos a asociar). */
-export const useGetAssignableUsers = (intervenorId: number, search: string) =>
+export const useGetAssignableUsers = (
+    intervenorId: number,
+    { page, pageSize, search, isActive }: QueryProps,
+) =>
     useQuery({
-        queryKey: intervenorKeys.assignable(intervenorId, search),
+        queryKey: intervenorKeys.assignable(intervenorId, {
+            page,
+            pageSize,
+            search,
+            isActive,
+        }),
+
         queryFn: ({ signal }) =>
             getAssignableUsers({
-                intervenorId,
                 signal,
-                params: { search: search || undefined },
+                params: {
+                    page,
+                    page_size: pageSize,
+                    search: search || undefined,
+                    is_active: isActive,
+                },
             }),
+
         placeholderData: keepPreviousData,
         enabled: intervenorId > 0,
     });

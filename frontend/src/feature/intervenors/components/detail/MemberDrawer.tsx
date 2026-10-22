@@ -16,15 +16,24 @@ type MemberDrawerProps = {
 
 export function MemberDrawer({ intervenor, onClose, onSubmit }: MemberDrawerProps) {
     const [search, setSearch] = useState("");
-    const [pickedId, setPickedId] = useState<number | null>(null);
+    const [pickedId, setPickedId] = useState<string | null>(null);
     const [isLeader, setIsLeader] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const pageSize = 10;
+    const isActive = true;
 
     const term = useDebouncedValue(search.trim());
-    const { data, isLoading, isError } = useGetAssignableUsers(intervenor.id, term);
-    const candidates = data?.data?.results ?? [];
+    const { data, isLoading, isError, isPlaceholderData } =
+    useGetAssignableUsers(intervenor.id, {
+        page,
+        pageSize,
+        search: term,
+        isActive,
+    });
+    const candidates = data?.data?.results ?? []; 
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -35,7 +44,7 @@ export function MemberDrawer({ intervenor, onClose, onSubmit }: MemberDrawerProp
 
         setSubmitting(true);
         try {
-            await onSubmit({ user_id: pickedId, is_leader: isLeader });
+            await onSubmit({ user: pickedId, is_leader: isLeader });
         } catch {
             setServerError("No se pudo asociar el usuario. Inténtalo de nuevo.");
             setSubmitting(false);
@@ -60,7 +69,7 @@ export function MemberDrawer({ intervenor, onClose, onSubmit }: MemberDrawerProp
                 <form className="ivr-form" onSubmit={handleSubmit} noValidate>
                     <div className="ivr-form-body">
                         <p className="ivr-form-lead">
-                            Selecciona el usuario que formará parte de este interventor. Solo se muestran usuarios que aún no pertenecen al equipo.
+                            Selecciona el usuario que formará parte de este interventor.
                         </p>
 
                         <div className="ivr-field">
@@ -68,7 +77,7 @@ export function MemberDrawer({ intervenor, onClose, onSubmit }: MemberDrawerProp
                             <div className="search small-search ivr-search">
                                 <Icon name="search" />
                                 <input
-                                    placeholder="Buscar por nombre, correo o rol..."
+                                    placeholder="Buscar por nombre, correo o usuario..."
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
                                 />
@@ -92,7 +101,7 @@ export function MemberDrawer({ intervenor, onClose, onSubmit }: MemberDrawerProp
                                         <span>
                                             {term
                                                 ? `Ningún usuario coincide con “${term}”.`
-                                                : "Todos los usuarios ya pertenecen a este equipo."}
+                                                : "No se encontro ningun usuario."}
                                         </span>
                                     </div>
                                 )}
@@ -101,20 +110,20 @@ export function MemberDrawer({ intervenor, onClose, onSubmit }: MemberDrawerProp
                                     <button
                                         type="button"
                                         role="radio"
-                                        aria-checked={pickedId === user.id}
+                                        aria-checked={pickedId === user.external_id}
                                         key={user.id}
-                                        className={pickedId === user.id ? "selected" : ""}
-                                        onClick={() => setPickedId(user.id)}
+                                        className={pickedId === user.external_id ? "selected" : ""}
+                                        onClick={() => setPickedId(user.external_id)}
                                     >
-                                        <span className="table-avatar">{initials(user.name)}</span>
+                                        <span className="table-avatar">{initials(user.full_name || user.external_id)}</span>
 
                                         <div>
-                                            <strong>{user.name}</strong>
-                                            <small>{user.email} · {user.role} · {user.shift}</small>
+                                            <strong>{user.full_name || user.external_id}</strong>
+                                            <small>{user.email} · {user.external_id} · {user.is_active}</small>
                                         </div>
 
                                         <i className="ivr-radio">
-                                            {pickedId === user.id && <Icon name="check" size={12} />}
+                                            {pickedId === user.external_id && <Icon name="check" size={12} />}
                                         </i>
                                     </button>
                                 ))}

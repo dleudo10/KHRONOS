@@ -9,13 +9,12 @@ export const ENDPOINTS = {
     summary: `${ROOT}/summary/`,
     detail: (id: number) => `${ROOT}/${id}/`,
     status: (id: number) => `${ROOT}/${id}/status/`,
-    members: (id: number) => `${ROOT}/${id}/memberships/`,
+    assignableUsers: () => `v1/application-users/`,
 
-    // ── Pendientes de backend ────────────────────
-    /** DELETE: quita un miembro del interventor. */
+    members: (id: number) => `${ROOT}/${id}/memberships/`,
+    add_member: (id: number) => `${ROOT}/${id}/add_member/`,
+
     member: (id: number, memberId: number) => `${ROOT}/${id}/memberships/${memberId}/`,
-    /** PATCH: nombra o quita al líder. */
-    leader: (id: number) => `${ROOT}/${id}/leader/`,
-    /** GET: usuarios que aún no pertenecen al interventor (para el selector). */
-    assignableUsers: (id: number) => `${ROOT}/${id}/assignable-users/`,
+    leader: (id: number) => `${ROOT}/${id}/handle_leader/`,
+    remove_member: (id: number) => `${ROOT}/${id}/remove_member/`,
 } as const;

@@ -1,8 +1,8 @@
 export type ServiceProps = {
     params?: {
-        page: number
-        page_size: number
-        search?: string
+        page?: number
+        page_size?: number
+        search?: string | undefined
         is_active?: boolean
     }
     signal?: AbortSignal

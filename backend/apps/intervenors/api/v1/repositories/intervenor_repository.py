@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import (
     Count,
     OuterRef,
@@ -13,10 +14,11 @@ from ....models import (
     Intervenor,
     IntervenorMembership
 )
+from ....olimpo_directory_client import OlimpoDirectoryClient
 
 class IntervenorRepository:
     @staticmethod
-    def list_queryset():
+    def list_queryset() -> Intervenor:
         leader_query = (
             IntervenorMembership.objects
             .filter(
@@ -57,7 +59,7 @@ class IntervenorRepository:
         )
         
     @staticmethod
-    def get_summary():
+    def get_summary() -> object:
         intervenors = Intervenor.objects.aggregate(
             total_intervenors=Count("id"),
             active_intervenors=Count(
@@ -100,11 +102,108 @@ class IntervenorRepository:
         }
     
     @staticmethod
-    def get_memberships(intervenor_id):
-        return (
-            IntervenorMembership.objects
-            .filter(
-                intervenor_id=intervenor_id,
-            )
-            .order_by("user")
+    def get_memberships(intervenor_id: int, access_token):
+        memberships = list(
+            IntervenorMembership.objects.filter(
+                intervenor=intervenor_id,
+                is_active=True,
+            ).order_by("id")
         )
+        
+        external_ids = list({
+            membership.user
+            for membership in memberships
+        })
+        
+        profiles = OlimpoDirectoryClient.lookup_users(
+            external_ids=external_ids,
+            access_token=access_token
+        )
+        
+        results = []
+        
+        for membership in memberships:
+            profile = profiles.get(membership.user)
+            print(profile)
+            
+            results.append({
+                "id": membership.pk,
+                "intervenor_id": membership.intervenor_id,
+                "is_leader": membership.is_leader,
+                "membership_active": membership.is_active,
+                "user": profile,
+                "created_at": membership.created_at,
+            })
+            
+        return results
+        
+    @staticmethod
+    @transaction.atomic
+    def add_member(intervenor_id: int, user: str, is_leader: bool = False) -> IntervenorMembership:
+        membership = IntervenorMembership.objects.filter(
+            intervenor_id=intervenor_id,
+            user=user,
+            is_active=False,
+        ).order_by("-id").first()
+
+        if is_leader:
+            IntervenorMembership.objects.filter(
+                intervenor_id=intervenor_id,
+                is_active=True,
+                is_leader=True,
+            ).update(is_leader=False)
+
+        if membership:
+            membership.is_active = True
+            membership.is_leader = is_leader
+            membership.save(update_fields=["is_active", "is_leader"])
+            return membership
+
+        return IntervenorMembership.objects.create(
+            intervenor_id=intervenor_id,
+            user=user,
+            is_leader=is_leader,
+        )
+        
+    @staticmethod
+    @transaction.atomic
+    def handle_leader(
+        intervenor_id: int,
+        membership_id: int,
+        is_leader: bool,
+    ) -> IntervenorMembership:
+        membership = IntervenorMembership.objects.get(
+            pk=membership_id,
+            intervenor_id=intervenor_id,
+            is_active=True,
+        )
+
+        if is_leader:
+            IntervenorMembership.objects.filter(
+                intervenor_id=intervenor_id,
+                is_active=True,
+                is_leader=True,
+            ).exclude(pk=membership.pk).update(is_leader=False)
+
+        membership.is_leader = is_leader
+        membership.save(update_fields=["is_leader"])
+
+        return membership
+    
+    @staticmethod
+    @transaction.atomic
+    def remove_member(
+        intervenor_id: int,
+        membership_id: int,
+    ) -> IntervenorMembership:
+        membership = IntervenorMembership.objects.get(
+            pk=membership_id,
+            intervenor_id=intervenor_id,
+            is_active=True,
+        )
+
+        membership.is_active = False
+        membership.is_leader = False
+        membership.save(update_fields=["is_active", "is_leader"])
+
+        return membership

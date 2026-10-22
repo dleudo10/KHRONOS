@@ -12,7 +12,7 @@ type MemberActionsMenuProps = {
 
 export function MemberActionsMenu({ member, top, right, onClose, onToggleLeader, onRemove }: MemberActionsMenuProps) {
     // Un usuario no disponible no puede ser líder (sí se le puede quitar el liderazgo).
-    const cannotLead = !member.is_leader && !member.is_active;
+    const cannotLead = !member.is_leader && !member.user.is_active;
 
     return (
         <>
