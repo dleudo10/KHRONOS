@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { IntervenorPayload } from "../types/intervenor.types";
 import { createIntervenor, updateIntervenor } from "../services/intervenors.api";
-import { assertSuccess } from "../utils/assertSuccess";
+import { assertSuccess } from "../../../utils/assertSuccess";
 import { intervenorKeys } from "./queryKeys";
 
 type SaveArguments = {

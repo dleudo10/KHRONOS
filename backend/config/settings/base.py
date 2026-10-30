@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     # MIS APLICACIONES
     'apps.core',
     'apps.intervenors',
+    'apps.workflows',
 ]
 
 # MIDDLEWARE

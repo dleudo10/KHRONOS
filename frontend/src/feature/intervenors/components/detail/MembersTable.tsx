@@ -3,7 +3,7 @@ import Badge from "../../../../components/ui/Badge";
 import Icon from "../../../../components/ui/Icon";
 import { initials } from "../../../../utils/initials";
 import type { IntervenorMember } from "../../types/member.types";
-import { fmtDate } from "../../utils/fmtDate";
+import { fmtDate } from "../../../../utils/fmtDate";
 
 type MembersTableProps = {
     members: IntervenorMember[];

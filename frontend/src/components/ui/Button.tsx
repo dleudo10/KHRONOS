@@ -9,11 +9,12 @@ type ButtonProps = {
     variant? : ButtonVariant;
     icon?: IconName;
     onClick?: () => void;
+    disabled?: boolean;
 }
 
-const Button = ({ children, variant = "secondary", icon, onClick }: ButtonProps) => {
+const Button = ({ children, variant = "secondary", icon, onClick, disabled = false }: ButtonProps) => {
     return (
-        <button className={`btn btn-${variant}`} onClick={onClick}>
+        <button className={`btn btn-${variant}`} onClick={onClick} disabled={disabled}>
             {icon && <Icon name={icon} size={16}/>}
             <span>{children}</span>
         </button>

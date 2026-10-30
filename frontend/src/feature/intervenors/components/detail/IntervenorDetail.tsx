@@ -4,7 +4,7 @@ import Button from "../../../../components/ui/Button";
 import Icon from "../../../../components/ui/Icon";
 import { TARGET_AVERAGE_MINUTES } from "../../constants";
 import type { Intervenor } from "../../types/intervenor.types";
-import { fmtDate } from "../../utils/fmtDate";
+import { fmtDate } from "../../../../utils/fmtDate";
 import { slaTone } from "../../utils/slaTone";
 import { MembersPanel } from "./MembersPanel";
 

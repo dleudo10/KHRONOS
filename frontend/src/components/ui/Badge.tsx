@@ -10,13 +10,17 @@ export type Tone =
 
 type BadgeProps = {
     children: ReactNode;
-    tone?: Tone
+    tone?: Tone;
+    icon?: boolean;
+    classname?: string;
 }
 
-const Badge = ({ children, tone = "neutral" }: BadgeProps ) => {
+const Badge = ({ children, tone = "neutral", icon = true, classname }: BadgeProps ) => {
     return (
-        <span className={`badge badge-${tone}`}>
-            <span className="badge-dot"/>
+        <span className={`badge badge-${tone} ${classname}`}>
+            {icon && (
+                <span className="badge-dot"/>
+            )}
             {children}
         </span>
     )

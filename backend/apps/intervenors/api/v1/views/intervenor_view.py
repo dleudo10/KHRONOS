@@ -35,7 +35,7 @@ class IntervenorViewSet(SoftDeleteViewSet):
         "update": "intervenors.change_intervenor",
         "partial_update": "intervenors.change_intervenor",
         "change_status": "intervenors.change_intervenor",
-        "summary": "intervenors.view_intervenor",
+        "summary": "intervenors.view_metrics",
         "add_member": "intervenors.manage_members",
         "memberships": "intervenors.view_intervenor",
         "handle_leader": "intervenors.manage_members",

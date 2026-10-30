@@ -28,6 +28,11 @@ export type IconName =
     | "logout" 
     | "layers" 
     | "eye"
+    | "edit"
+    | "copy-plus"
+    | "file-pen"
+    | "zap"
+    | "info";
 ;
 
 
@@ -113,6 +118,31 @@ const Icon = ({ name, size = 18 }: { name: IconName; size?: number }) => {
             <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/>
             <circle cx="12" cy="12" r="3"/>
         </>,
+        edit: <path d="m16 4 4 4M4 20l4-.8L19.2 8a2.1 2.1 0 0 0-3-3L5 16.2 4 20Z" />,
+        "copy-plus": (
+            <>
+                <rect x="8" y="8" width="13" height="13" rx="2" />
+                <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+                <path d="M14.5 12v5m-2.5-2.5h5" />
+            </>
+        ),
+
+        "file-pen": (
+            <>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8" />
+                <path d="M14 2v6h6" />
+                <path d="M14 2l6 6" />
+                <path d="m16 18 4-4a2.1 2.1 0 0 1 3 3l-4 4-4 1 1-4Z" />
+            </>
+        ),
+
+        info: (
+            <>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 11v5m0-9h.01" />
+            </>
+        ),
+        zap: <path d="M13 2 3 14h8l-1 8 11-12h-8l1-8Z" />,
     };
     
     return  (

@@ -7,22 +7,19 @@ import EmptyIntervenors from "../components/list/EmptyIntervenors";
 import { IntervenorCards } from "../components/list/IntervenorCards";
 import { IntervenorList } from "../components/list/IntervenorList";
 import { IntervenorsToolbar } from "../components/list/IntervenorsToolbar";
-import { Pagination } from "../components/shared/Pagination";
+import { Pagination } from "../../../components/common/Pagination";
 import IntervenorKPIs from "../components/summary/IntervenorKPIs";
 import { INTERVENOR_PAGE_SIZES } from "../constants";
 import { useChangeIntervenorStatus } from "../hooks/useChangeIntervenorStatus";
-import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import { useEscapeKey } from "../hooks/useEscapeKey";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { useGetIntervenors } from "../hooks/useGetIntervenors";
 import { useGetIntervenorsSummary } from "../hooks/useGetIntervenorsSummary";
 import { useSaveIntervenor } from "../hooks/useSaveIntervenor";
 import { toIntervenorPayload, type IntervenorFormValues } from "../schemas/intervenor.schema";
 import type { IntervenorStatusFilter, IntervenorView } from "../types/intervenor.types";
-
-type DrawerMode = null | "create" | "edit";
-
-const MOBILE_LIST_BREAKPOINT = 640;
-const STACKED_LAYOUT_BREAKPOINT = 1000;
+import type { DrawerMode } from "../../../types/drawer.type";
+import { MOBILE_LIST_BREAKPOINT, STACKED_LAYOUT_BREAKPOINT } from "../../../const";
 
 const initialView = (): IntervenorView =>
     typeof window !== "undefined" && window.innerWidth < MOBILE_LIST_BREAKPOINT ? "list" : "cards";

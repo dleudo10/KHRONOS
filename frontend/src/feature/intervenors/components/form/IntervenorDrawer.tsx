@@ -6,7 +6,7 @@ import Icon from "../../../../components/ui/Icon";
 import { suggestCode } from "../../../../utils/suggestCode";
 import { IntervenorSchema, type IntervenorFormValues } from "../../schemas/intervenor.schema";
 import type { Intervenor } from "../../types/intervenor.types";
-import { fmtDate } from "../../utils/fmtDate";
+import { fmtDate } from "../../../../utils/fmtDate";
 import { IntervenorStatusAction } from "./IntervenorStatusAction";
 
 type IntervenorDrawerProps = {
@@ -16,7 +16,7 @@ type IntervenorDrawerProps = {
     existing: Intervenor[];
     onClose: () => void;
     onSave: (values: IntervenorFormValues) => Promise<void>;
-    onChangeStatus?: () => Promise<void>;
+    onChangeStatus?: () => Promise<void>; 
     statusLoading?: boolean;
 };
 

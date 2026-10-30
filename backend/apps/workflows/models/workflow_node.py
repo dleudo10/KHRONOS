@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 
 class WorkflowNodeTypeChoice(models.TextChoices):
     START = "start", "Inicio"
-    TASK = "task", "Tarea"
+    TASK = "task", "Tarea"  
     END = "end", "Fin"
     SYSTEM_ACTION = "system_action", "Acción del sistema"
 
@@ -16,8 +16,8 @@ class WorkflowNode(models.Model):
     description = models.TextField(blank=True, default="")
     node_type = models.CharField(max_length=20, choices=WorkflowNodeTypeChoice.choices)
     interventor = models.ForeignKey(Intervenor, on_delete=models.SET_NULL, null=True, blank=True, related_name="workflow_nodes")
-    expected_duration_minutes = models.PositiveIntegerField()
-    sla_minutes = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    expected_duration_minutes = models.PositiveIntegerField(null=True, blank=True)
+    sla_minutes = models.PositiveIntegerField(validators=[MinValueValidator(1)], null=True, blank=True)
     position_x = models.IntegerField(default=0)
     position_y = models.IntegerField(default=0)
     configuration = models.JSONField(default=dict, blank=True)

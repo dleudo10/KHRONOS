@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { changeIntervenorStatus } from "../services/intervenors.api";
-import { assertSuccess } from "../utils/assertSuccess";
+import { assertSuccess } from "../../../utils/assertSuccess";
 import { intervenorKeys } from "./queryKeys";
 
 type ChangeStatusArguments = {

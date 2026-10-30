@@ -28,6 +28,13 @@
   --red: #c73737;
   --red-bg: #fff0f0;
   --blue-bg: #edf4ff;
+  --blue: #2563eb;
+  --blue-bg: #dbeafe;
+  --orange: #c2410c;
+  --orange-bg: #ffedd5;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-100: #f3f4f6;
   --sidebar: 248px;
   --topbar: 68px;
   --radius: 12px;
@@ -801,6 +808,7 @@ td {
   border-bottom: 1px solid var(--line-soft);
   color: #475467;
   white-space: nowrap;
+  min-height: 57px;
 }
 tbody tr:last-child td {
   border: 0;
@@ -3854,9 +3862,58 @@ button.ivr-row:hover { background: var(--brand-25); }
   color: #344054;
   text-align: left;
 }
-.ivr-menu button:hover { background: var(--brand-25); color: var(--brand-600); }
+/* .ivr-menu button:hover { background: var(--brand-25); color: var(--brand-600); }
 .ivr-menu button.danger { color: var(--red); }
-.ivr-menu button.danger:hover { background: var(--red-bg); color: var(--red); }
+.ivr-menu button.danger:hover { background: var(--red-bg); color: var(--red); } */
+.ivr-menu button:hover {
+  background: var(--brand-25);
+  color: var(--brand-600);
+}
+
+/* Verde: activar, aprobar, confirmar */
+.ivr-menu button.success {
+  color: var(--green);
+}
+.ivr-menu button.success:hover {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+/* Azul: información, asignar, consultar */
+.ivr-menu button.info {
+  color: var(--blue);
+}
+.ivr-menu button.info:hover {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
+/* Naranja: advertencia, pausar, inactivar */
+.ivr-menu button.warning {
+  color: var(--orange);
+}
+.ivr-menu button.warning:hover {
+  background: var(--orange-bg);
+  color: var(--orange);
+}
+
+/* Gris: acciones secundarias */
+.ivr-menu button.neutral {
+  color: var(--gray-600);
+}
+.ivr-menu button.neutral:hover {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+/* Rojo: eliminar, quitar, acciones destructivas */
+.ivr-menu button.danger {
+  color: var(--red);
+}
+.ivr-menu button.danger:hover {
+  background: var(--red-bg);
+  color: var(--red);
+}
 .ivr-menu-sep { height: 1px; background: var(--line-soft); margin: 4px 2px; }
  
 /* Estados vacíos */
@@ -4044,4 +4101,82 @@ button.ivr-row:hover { background: var(--brand-25); }
   .ivr-drawer .drawer-actions { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
   .ivr-drawer .drawer-actions .btn { flex: 1; height: 42px; }
   .ivr-confirm > div:last-child .btn { flex: 1; }
+}
+
+.version-stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  border:1px solid var(--line);
+  border-radius:8px;
+  margin-bottom:14px
+}
+.version-stats span{
+  padding:10px 6px;
+  display:flex;
+  flex-direction:column;
+  font-size:7px;
+  color:var(--muted);
+  border-right:
+  1px solid var(--line);
+  text-align:center}
+.version-stats span:last-child{border:0}
+.version-stats b{font-size:11px;color:var(--text);margin-bottom:4px}
+
+
+.version-draft-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    margin: 18px 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface-secondary, #f8fafc);
+}
+
+.version-draft-notice > svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.version-draft-notice div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.version-draft-notice strong {
+    font-size: 14px;
+}
+
+.version-draft-notice span {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary, #64748b);
+}
+
+.version-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.version-info > svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.version-info p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary, #64748b);
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
 }

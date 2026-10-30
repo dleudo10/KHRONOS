@@ -1,0 +1,1 @@
+export type DrawerMode = null | "create" | "edit";

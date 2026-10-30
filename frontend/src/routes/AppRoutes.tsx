@@ -8,7 +8,7 @@ import { NotificationsPage } from "../feature/notifications";
 import { IntervenorsPage } from "../feature/intervenors";
 import { AnalyticsPages } from "../feature/analytics";
 import { AuditPages } from "../feature/audit";
-import { Workflows } from "../feature/workflows";
+import { Workflows, WorkflowDetails, WorkflowBuilder } from "../feature/workflows";
 import ProtectedRoutes from "./ProtectedRoutes";
 
 // function PlaceholderPage({ title }: { title: string }) {
@@ -19,6 +19,10 @@ import ProtectedRoutes from "./ProtectedRoutes";
 // 		</div>
 // 	);
 // }
+
+import Prueba from "../Prueba"
+import Prueba2 from "../Prueba2"
+
 
 export function AppRoutes() {
 
@@ -40,6 +44,8 @@ export function AppRoutes() {
 							<Route path="/notificaciones" element={<NotificationsPage />} />
 
 							<Route path="/workflows" element={<Workflows />} />
+							<Route path="/workflows/:id/details" element={<WorkflowDetails />} />
+							<Route path="/workflows/:id_workflow/version/:id_workflow_version/builder" element={<WorkflowBuilder />} />
 
 							<Route path="/interventores" element={<IntervenorsPage />} />
 
@@ -49,6 +55,9 @@ export function AppRoutes() {
 						</Route>
 
 						<Route path="*" element={<Navigate to="/dashboard" replace />} />
+						<Route path="/preview" element={<Prueba />} />
+						<Route path="/preview2" element={<Prueba2 />} />
+
 					</Route>
 				</Routes>
 			</LayoutProvider>

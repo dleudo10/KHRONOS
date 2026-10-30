@@ -4,7 +4,7 @@ type IconName =
   | "grid" | "bed" | "check" | "bell" | "flow" | "users" | "building"
   | "chart" | "history" | "settings" | "search" | "calendar" | "arrow"
   | "clock" | "alert" | "spark" | "more" | "filter" | "plus" | "play"
-  | "pause" | "chevron" | "menu" | "close" | "logout" | "layers" | "eye";
+  | "pause" | "info" | "chevron" | "menu" | "close" | "logout" | "layers" | "eye";
 
 function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
@@ -29,6 +29,7 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     plus: <path d="M12 5v14M5 12h14"/>,
     play: <path d="m8 5 11 7-11 7V5Z"/>,
     pause: <path d="M9 5v14m6-14v14"/>,
+    info: <><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></>,
     chevron: <path d="m9 18 6-6-6-6"/>,
     menu: <path d="M4 6h16M4 12h16M4 18h16"/>,
     close: <path d="m6 6 12 12M18 6 6 18"/>,
@@ -39,7 +40,7 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
-type Page = "Dashboard" | "Giro de camas" | "Mis tareas" | "Notificaciones" | "Workflows" | "Versiones" | "Workflow Builder" | "Interventores" | "Camas" | "Servicios" | "Analytics" | "Auditoría" | "Configuración" | "Documentación";
+type Page = "Dashboard" | "Giro de camas" | "Mis tareas" | "Notificaciones" | "Workflows" | "Workflow Detail" | "Versiones" | "Workflow Builder" | "Workflow Executions" | "Execution Detail" | "Interventores" | "Camas" | "Servicios" | "Analytics" | "Auditoría" | "Configuración" | "Documentación";
 type Tone = "success" | "info" | "warning" | "danger" | "neutral";
 
 type TaskStatus = "Pendiente" | "En proceso" | "Completada" | "Bloqueada";
@@ -63,8 +64,7 @@ const navTop: {label: Page; icon: IconName}[] = [
   { label: "Mis tareas", icon: "check" }, { label: "Notificaciones", icon: "bell" },
 ];
 const navFlow: {label: Page; icon: IconName}[] = [
-  { label: "Workflows", icon: "flow" }, { label: "Versiones", icon: "layers" },
-  { label: "Workflow Builder", icon: "spark" },
+  { label: "Workflows", icon: "flow" },
 ];
 const navAdmin: {label: Page; icon: IconName}[] = [
   { label: "Interventores", icon: "users" }, { label: "Camas", icon: "bed" },
@@ -85,8 +85,9 @@ function SelectPill({ children }: { children: ReactNode }) {
 
 function Sidebar({ page, setPage, open, close }: { page: Page; setPage: (p: Page) => void; open: boolean; close: () => void }) {
   const { unread } = useApp();
+  const workflowPage = ["Workflows","Workflow Detail","Versiones","Workflow Builder","Workflow Executions","Execution Detail"].includes(page);
   const section = (items: typeof navTop) => items.map(item =>
-    <button key={item.label} className={`nav-item ${page === item.label ? "active" : ""}`} onClick={() => { setPage(item.label); close(); }}>
+    <button key={item.label} className={`nav-item ${page === item.label || (item.label === "Workflows" && workflowPage) ? "active" : ""}`} onClick={() => { setPage(item.label); close(); }}>
       <Icon name={item.icon}/><span>{item.label}</span>{item.label === "Notificaciones" && unread > 0 && <b>{unread}</b>}
     </button>);
   return <>
@@ -96,17 +97,7 @@ function Sidebar({ page, setPage, open, close }: { page: Page; setPage: (p: Page
         <div className="brand-mark">
           <Icon name="bed" size={22}/>
           <span/>
-        </div>
-        
-        <div>
-          <strong>Giro de Camas</strong>
-          <small>OPERACIONES</small>
-        </div>
-        
-        <button className="mobile-close" onClick={close}>
-          <Icon name="close"/>
-        </button>
-      </div>
+          </div><div><strong>Giro de Camas</strong><small>OPERACIONES</small></div><button className="mobile-close" onClick={close}><Icon name="close"/></button></div>
       <nav>
         {section(navTop)}
         <div className="nav-label">GESTIÓN DE FLUJOS</div>
@@ -125,11 +116,9 @@ function Sidebar({ page, setPage, open, close }: { page: Page; setPage: (p: Page
 
 function Topbar({ page, toggleMenu, setPage }: { page: Page; toggleMenu: () => void; setPage: (p: Page) => void }) {
   const { unread } = useApp();
+  const pageLabel: Partial<Record<Page,string>> = {"Workflow Detail":"Detalle del workflow","Workflow Executions":"Ejecuciones","Execution Detail":"Detalle de ejecución","Workflow Builder":"Constructor de workflow"};
   return <header className="topbar">
-    <div className="crumb">
-      <button className="menu-button" onClick={toggleMenu}>
-        <Icon name="menu"/>
-        </button><span>Operación</span><Icon name="chevron" size={13}/><strong>{page}</strong></div>
+    <div className="crumb"><button className="menu-button" onClick={toggleMenu}><Icon name="menu"/></button><span>Operación</span><Icon name="chevron" size={13}/><strong>{pageLabel[page]||page}</strong></div>
     <div className="search"><Icon name="search" size={17}/><input placeholder="Buscar paciente, habitación, cama..."/><kbd>⌘ K</kbd></div>
     <div className="top-actions"><button className="icon-button notification" onClick={() => setPage("Notificaciones")}><Icon name="bell"/>{unread > 0 && <span>{unread}</span>}</button><div className="avatar small">DL</div></div>
   </header>;
@@ -202,11 +191,7 @@ function PageHeader({ title, subtitle, actions }: { title: string; subtitle: str
 
 function Dashboard({ setPage, openBed }: { setPage: (p: Page) => void; openBed: (b: typeof beds[number]) => void }) {
   return <>
-    <PageHeader 
-      title="Buenos días, David" 
-      subtitle="Resumen operativo del giro de camas" 
-      actions={<><SelectPill>Hoy</SelectPill><Button icon="chart" onClick={() => setPage("Analytics")}>Ver reporte</Button></>}
-    />
+    <PageHeader title="Buenos días, David" subtitle="Resumen operativo del giro de camas" actions={<><SelectPill>Hoy</SelectPill><Button icon="chart" onClick={() => setPage("Analytics")}>Ver reporte</Button></>}/>
     <KpiCards/>
     <section className="panel"><PanelTitle title="Giro de camas en tiempo real" action={<button className="text-button" onClick={() => setPage("Giro de camas")}>Ver todas las camas <Icon name="arrow" size={15}/></button>}/>
       <div className="bed-grid dashboard-beds">{beds.slice(0,4).map(b => <BedCard key={b.bed} bed={b} onClick={() => openBed(b)}/>)}</div>
@@ -264,12 +249,132 @@ function Tasks() {
   </>;
 }
 
+const workflowRows = [
+  {name:"Alta hospitalaria estándar",code:"ALTA-EST",description:"Coordina el egreso clínico y la liberación de la cama.",active:true,published:"v1.2",versions:4,modified:"24 Jun 2025",author:"David Leudo",draft:true},
+  {name:"Alta con coordinación de enfermería",code:"ALTA-ENF",description:"Alta con validaciones adicionales del equipo de enfermería.",active:true,published:"v2.0",versions:3,modified:"22 Jun 2025",author:"Ana Ríos",draft:false},
+  {name:"Preparación y liberación de cama",code:"LIB-CAMA",description:"Prepara la habitación para una nueva asignación.",active:true,published:"v1.1",versions:2,modified:"18 Jun 2025",author:"Carolina Vélez",draft:true},
+  {name:"Limpieza y disponibilidad de cama",code:"LIMP-CAMA",description:"Controla limpieza terminal, verificación y disponibilidad.",active:false,published:"—",versions:1,modified:"12 Jun 2025",author:"David Leudo",draft:true},
+];
+
+function WorkflowNav({ current }: { current:"definitions"|"executions" }) {
+  const { navigate } = useApp();
+  return <div className="module-nav"><button className={current==="definitions"?"active":""} onClick={()=>navigate("Workflows")}><Icon name="layers" size={16}/>Definiciones</button><button className={current==="executions"?"active":""} onClick={()=>navigate("Workflow Executions")}><Icon name="play" size={16}/>Ejecuciones</button></div>;
+}
+
+function DemoNote() {
+  return <div className="demo-note"><Icon name="spark" size={15}/><span>Contenido demostrativo del prototipo. Los cambios se simulan localmente.</span></div>;
+}
+
 function Workflows({ setPage }: { setPage:(p:Page)=>void }) {
-  const flows=[["Alta Hospitalaria","v1.2","12 pasos","8 interventores","Publicado","David Leudo"],["Alta UCI","v1.0","15 pasos","10 interventores","Borrador","Ana Ríos"],["Alta Ambulatoria","v2.1","8 pasos","5 interventores","Publicado","David Leudo"]];
-  return <><PageHeader title="Workflows" subtitle="Configura los procesos que coordinan el giro de camas." actions={<Button variant="primary" icon="plus" onClick={()=>setPage("Workflow Builder")}>Crear workflow</Button>}/>
-    <section className="panel workflow-panel"><div className="workflow-tools"><div className="search small-search"><Icon name="search"/><input placeholder="Buscar workflow..."/></div><SelectPill>Todos los estados</SelectPill></div>
-    <div className="workflow-list">{flows.map((f,i)=><div className="workflow-row" key={f[0]}><div className="flow-icon"><Icon name="flow"/></div><div className="flow-name"><strong>{f[0]}</strong><span>Modificado hace {i+1} días por {f[5]}</span></div><div><span>VERSIÓN</span><strong>{f[1]}</strong></div><div><span>ESTRUCTURA</span><strong>{f[2]}</strong><small>{f[3]}</small></div><Badge tone={f[4]==="Publicado"?"success":"warning"}>{f[4]}</Badge><Button onClick={()=>setPage("Workflow Builder")}>Editar</Button><button className="icon-button"><Icon name="more"/></button></div>)}</div></section>
+  const { notify } = useApp();
+  const [rows, setRows] = useState(workflowRows);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("Todos");
+  const [draftFilter, setDraftFilter] = useState("Todos");
+  const [sort, setSort] = useState("recent");
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({name:"",code:"",description:"",active:true});
+  const [formError, setFormError] = useState("");
+  const filteredRows = rows
+    .filter(row => `${row.name} ${row.code} ${row.description} ${row.author}`.toLowerCase().includes(query.toLowerCase()))
+    .filter(row => status === "Todos" || (status === "Activos" ? row.active : !row.active))
+    .filter(row => draftFilter === "Todos" || (draftFilter === "Con borrador" ? row.draft : !row.draft))
+    .sort((a,b) => sort === "name" ? a.name.localeCompare(b.name) : sort === "versions" ? b.versions-a.versions : 0);
+
+  const createWorkflow = () => {
+    const name = form.name.trim();
+    const code = form.code.trim().toUpperCase();
+    if (!name || !code) { setFormError("El nombre y el código son obligatorios."); return; }
+    if (rows.some(row => row.code.toLowerCase() === code.toLowerCase())) { setFormError("Ya existe un workflow con ese código."); return; }
+    const next = {name, code, description:form.description.trim() || "Sin descripción.", active:form.active, published:"—", versions:1, modified:"Hoy", author:"David Leudo", draft:true};
+    setRows(current => [next, ...current]);
+    setForm({name:"",code:"",description:"",active:true});
+    setFormError("");
+    setCreating(false);
+    notify("Workflow creado con una versión borrador", "success");
+  };
+
+  return <>
+    <WorkflowNav current="definitions"/>
+    <PageHeader title="Workflows" subtitle="Define, versiona y monitorea los flujos que coordinan los procesos de la clínica."
+      actions={<Button variant="primary" icon="plus" onClick={()=>setCreating(true)}>Crear workflow</Button>}/>
+    <DemoNote/>
+    <div className="workflow-kpis">
+      {[[String(rows.length),"Total de workflows","flow"],[String(rows.filter(r=>r.active).length),"Activos","check"],[String(rows.filter(r=>!r.active).length),"Inactivos","pause"],[String(rows.filter(r=>r.draft).length),"Con borrador","layers"]].map(x=>
+        <div key={x[1]}><span><Icon name={x[2] as IconName}/></span><div><strong>{x[0]}</strong><small>{x[1]}</small></div></div>)}
+    </div>
+    <section className="panel workflow-admin">
+      <div className="workflow-section-heading">
+        <div><h2>Definiciones del proceso</h2><p>Selecciona un workflow para revisar sus versiones, nodos y ejecuciones.</p></div>
+        <span className="workflow-result-count">{filteredRows.length} resultados</span>
+      </div>
+      <div className="workflow-filters workflow-filters-v2">
+        <div className="search small-search workflow-search"><Icon name="search"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar nombre, código o descripción..."/></div>
+        <label className="workflow-filter"><span>Estado</span><select value={status} onChange={e=>setStatus(e.target.value)}><option>Todos</option><option>Activos</option><option>Inactivos</option></select></label>
+        <label className="workflow-filter"><span>Versiones</span><select value={draftFilter} onChange={e=>setDraftFilter(e.target.value)}><option>Todos</option><option>Con borrador</option><option>Sin borrador</option></select></label>
+        <label className="workflow-filter"><span>Ordenar por</span><select value={sort} onChange={e=>setSort(e.target.value)}><option value="recent">Más recientes</option><option value="name">Nombre A–Z</option><option value="versions">Más versiones</option></select></label>
+        {(query || status!=="Todos" || draftFilter!=="Todos" || sort!=="recent") && <button className="clear-filter" onClick={()=>{setQuery("");setStatus("Todos");setDraftFilter("Todos");setSort("recent")}}>Limpiar filtros</button>}
+      </div>
+      {filteredRows.length ? <div className="workflow-cards">
+        {filteredRows.map(row=><article className="workflow-card" key={row.code}>
+          <div className="workflow-card-icon"><Icon name="flow" size={20}/></div>
+          <div className="workflow-card-main">
+            <div className="workflow-card-title"><h3>{row.name}</h3><Badge tone={row.active?"success":"neutral"}>{row.active?"Activo":"Inactivo"}</Badge></div>
+            <div className="workflow-code">{row.code}</div>
+            <p>{row.description}</p>
+            <div className="workflow-card-meta">
+              <span><Icon name="layers" size={14}/>{row.versions} {row.versions===1?"versión":"versiones"}</span>
+              <span><Icon name="check" size={14}/>{row.published==="—"?"Sin publicar":`Publicada ${row.published}`}</span>
+              <span><Icon name="clock" size={14}/>Actualizado {row.modified}</span>
+              <span><Icon name="users" size={14}/>{row.author}</span>
+            </div>
+          </div>
+          <div className="workflow-card-actions">
+            {row.draft && <Badge tone="warning">Borrador pendiente</Badge>}
+            <Button onClick={()=>setPage("Workflow Detail")}>Ver detalle <Icon name="arrow" size={14}/></Button>
+            <div className="workflow-secondary-actions">
+              <button onClick={()=>setPage("Versiones")}><Icon name="layers" size={14}/> Versiones</button>
+              <button onClick={()=>setPage("Workflow Builder")}><Icon name="flow" size={14}/> {row.draft?"Editar borrador":"Consultar grafo"}</button>
+              <button onClick={()=>setPage("Workflow Executions")}><Icon name="play" size={14}/> Ejecuciones</button>
+            </div>
+          </div>
+        </article>)}
+      </div> : <div className="workflow-empty"><span><Icon name="search" size={22}/></span><h3>No encontramos workflows</h3><p>Prueba con otro término o limpia los filtros para ver todas las definiciones.</p><Button onClick={()=>{setQuery("");setStatus("Todos");setDraftFilter("Todos");setSort("recent")}}>Limpiar filtros</Button></div>}
+    </section>
+    {creating&&<><div className="drawer-backdrop" onClick={()=>setCreating(false)}/><aside className="drawer workflow-create">
+      <div className="drawer-head"><div><span>NUEVA DEFINICIÓN</span><h2>Crear workflow</h2></div><button className="icon-button" onClick={()=>setCreating(false)}><Icon name="close"/></button></div>
+      <div className="drawer-form">
+        <p>Primero crea la definición. Después podrás agregar nodos, configurar dependencias y guardar una versión borrador en el constructor.</p>
+        <label>Nombre del workflow *<input autoFocus value={form.name} onChange={e=>setForm(v=>({...v,name:e.target.value}))} placeholder="Ej. Alta hospitalaria especializada"/></label>
+        <label>Código único *<input value={form.code} onChange={e=>setForm(v=>({...v,code:e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g,"")}))} placeholder="Ej. ALTA-ESP" maxLength={24}/><small>Usa letras, números, guiones o guion bajo.</small></label>
+        <label>Descripción<textarea value={form.description} onChange={e=>setForm(v=>({...v,description:e.target.value}))} placeholder="¿Qué proceso coordina este workflow?"/></label>
+        <label>Estado inicial<select value={form.active?"active":"inactive"} onChange={e=>setForm(v=>({...v,active:e.target.value==="active"}))}><option value="active">Activo</option><option value="inactive">Inactivo</option></select></label>
+        {formError&&<div className="workflow-form-error"><Icon name="alert" size={15}/>{formError}</div>}
+        <div className="workflow-create-note"><Icon name="info" size={16}/><span>Se creará una primera versión <strong>borrador</strong>. No se publicará automáticamente.</span></div>
+      </div>
+      <div className="drawer-actions"><Button onClick={()=>setCreating(false)}>Cancelar</Button><Button variant="primary" icon="plus" onClick={createWorkflow}>Crear workflow</Button></div>
+    </aside></>}
   </>;
+}
+
+function WorkflowDetail() {
+  const { navigate, notify } = useApp();
+  return <><WorkflowNav current="definitions"/><div className="detail-back"><Button variant="ghost" icon="arrow" onClick={()=>navigate("Workflows")}>Volver a workflows</Button></div><PageHeader title="Alta hospitalaria estándar" subtitle="ALTA-EST · Coordina el egreso clínico y la liberación de la cama." actions={<><Button icon="play" onClick={()=>navigate("Workflow Executions")}>Ver ejecuciones</Button><Button icon="layers" onClick={()=>navigate("Versiones")}>Ver versiones</Button><Button variant="primary" icon="plus" onClick={()=>notify("Nueva versión v1.3 creada como borrador","success")}>Crear nueva versión</Button></>}/>
+    <div className="detail-summary"><section className="panel workflow-overview"><div className="overview-head"><div><Badge tone="success">Activo</Badge><h2>Definición del proceso</h2><p>Las ejecuciones iniciadas conservan siempre la versión con la que comenzaron.</p></div><Button onClick={()=>navigate("Workflow Builder")}>Editar borrador v1.3</Button></div><div className="metadata-grid">{[["Versión publicada","v1.2"],["Borradores disponibles","v1.3"],["Fecha de creación","12 Mar 2025"],["Última modificación","24 Jun 2025"],["Modificado por","David Leudo"],["Ejecuciones históricas","482"]].map(x=><div key={x[0]}><span>{x[0]}</span><strong>{x[1]}</strong></div>)}</div></section>
+    <section className="panel published-summary"><div className="panel-title"><div><h2>Versión publicada</h2></div><Badge tone="success">PUBLISHED</Badge></div><strong className="version-number">v1.2</strong><div className="version-stats"><span><b>10</b>Nodos</span><span><b>6</b>Tareas humanas</span><span><b>20 Jun</b>Publicada</span></div><Button icon="eye" onClick={()=>navigate("Workflow Builder")}>Consultar definición</Button></section></div>
+    <section className="panel"><div className="panel-title"><div><h2>Versiones recientes</h2></div><button className="text-button" onClick={()=>navigate("Versiones")}>Ver historial completo <Icon name="arrow" size={14}/></button></div><VersionRows compact/></section>
+  </>;
+}
+
+function VersionRows({ compact=false }: { compact?:boolean }) {
+  const { navigate, notify }=useApp();
+  const versions=[["v1.3","DRAFT","24 Jun 2025","David Leudo","—","10"],["v1.2","PUBLISHED","18 Jun 2025","David Leudo","20 Jun 2025","10"],["v1.1","ARCHIVED","02 May 2025","Ana Ríos","04 May 2025","9"],["v1.0","ARCHIVED","12 Mar 2025","David Leudo","15 Mar 2025","8"]];
+  return <div className="table-wrap"><table><thead><tr><th>Versión</th><th>Estado</th><th>Fecha de creación</th><th>Autor</th><th>Fecha de publicación</th><th>Nodos</th><th>Acciones</th></tr></thead><tbody>{versions.slice(0,compact?3:versions.length).map(v=><tr key={v[0]}><td><strong>{v[0]}</strong></td><td><Badge tone={v[1]==="PUBLISHED"?"success":v[1]==="DRAFT"?"warning":"neutral"}>{v[1]}</Badge></td><td>{v[2]}</td><td>{v[3]}</td><td>{v[4]}</td><td>{v[5]}</td><td><div className="row-actions"><Button icon="eye" onClick={()=>navigate("Workflow Builder")}>{v[1]==="DRAFT"?"Abrir":"Consultar"}</Button>{v[1]==="DRAFT"?<Button variant="primary" onClick={()=>navigate("Workflow Builder")}>Editar</Button>:<Button onClick={()=>notify(`Nueva versión creada a partir de ${v[0]}`,"success")}>Crear versión</Button>}</div></td></tr>)}</tbody></table></div>;
+}
+
+function WorkflowVersions() {
+  const { navigate, notify }=useApp();
+  return <><WorkflowNav current="definitions"/><div className="detail-back"><Button variant="ghost" icon="arrow" onClick={()=>navigate("Workflow Detail")}>Alta hospitalaria estándar</Button></div><PageHeader title="Historial de versiones" subtitle="Consulta cambios publicados y administra borradores editables." actions={<Button variant="primary" icon="plus" onClick={()=>notify("Nueva versión v1.4 creada como borrador","success")}>Crear nueva versión</Button>}/><div className="immutability-note"><Icon name="history"/><div><strong>Historial inmutable</strong><span>Las versiones publicadas o archivadas no se editan. Crea un borrador para introducir cambios.</span></div></div><section className="panel"><VersionRows/></section></>;
 }
 
 function WorkflowBuilder() {
@@ -299,10 +404,12 @@ function WorkflowBuilder() {
   const [dependencyCandidate,setDependencyCandidate]=useState(1);
   const [dragging,setDragging]=useState<{id:number;clientX:number;clientY:number;x:number;y:number}|null>(null);
   const [simulation,setSimulation]=useState<number|null>(null);
+  const [validationOpen,setValidationOpen]=useState(false);
+  const [publishConfirm,setPublishConfirm]=useState(false);
   const selected=nodes.find(n=>n.id===selectedId)||nodes[0];
   const relationCount=nodes.reduce((total,node)=>total+node.dependencies.length,0);
-  const commit=(next:FlowNode[])=>{setHistory(h=>[...h,nodes]);setFuture([]);setNodes(next);setPublished(false)};
-  const update=(field:keyof FlowNode,value:string|number|boolean|number[])=>setNodes(current=>current.map(n=>n.id===selected.id?{...n,[field]:value}:n));
+  const commit=(next:FlowNode[])=>{if(published){notify("Las versiones publicadas son inmutables","warning");return}setHistory(h=>[...h,nodes]);setFuture([]);setNodes(next);setPublished(false)};
+  const update=(field:keyof FlowNode,value:string|number|boolean|number[])=>{if(published)return;setNodes(current=>current.map(n=>n.id===selected.id?{...n,[field]:value}:n))};
   const addNode=(type:NodeType)=>{
     if((type==="start"&&nodes.some(n=>n.type==="start"))||(type==="end"&&nodes.some(n=>n.type==="end"))){notify(`El grafo solo puede tener un nodo de ${type==="start"?"inicio":"fin"}`,"warning");return}
     const labels={start:"Inicio",task:"Nueva tarea",condition:"Nueva condición",split:"División paralela",join:"Unión de dependencias",end:"Fin"};
@@ -325,7 +432,9 @@ function WorkflowBuilder() {
   const componentList:{type:NodeType;label:string;icon:IconName;hint:string}[]=[{type:"start",label:"Inicio",icon:"play",hint:"Punto de entrada"},{type:"task",label:"Tarea",icon:"check",hint:"Unidad ejecutable"},{type:"condition",label:"Condición",icon:"flow",hint:"Decisión lógica"},{type:"split",label:"División",icon:"layers",hint:"Abre rutas paralelas"},{type:"join",label:"Unión",icon:"layers",hint:"Espera dependencias"},{type:"end",label:"Fin",icon:"check",hint:"Cierre del flujo"}];
   const typeLabel={start:"Inicio",task:"Tarea",condition:"Condición",split:"División paralela",join:"Unión",end:"Fin"}[selected.type];
   const nodeIcon=(type:NodeType):IconName=>type==="start"?"play":type==="task"?"check":type==="condition"?"flow":type==="end"?"check":"layers";
-  return <div className="builder-shell"><div className="builder-top"><div><Button variant="ghost" icon="arrow" onClick={()=>navigate("Workflows")}>Volver</Button><div><strong>Alta Hospitalaria</strong><span>v1.3 — {published?"Publicado":"Borrador"} · grafo dirigido</span></div></div><div><Button variant="ghost" onClick={undo}>Deshacer</Button><Button variant="ghost" onClick={redo}>Rehacer</Button><Button icon="play" onClick={simulate}>{simulation===null?"Simular":simulation>=maxLevel?"Reiniciar":"Siguiente etapa"}</Button><Button onClick={()=>notify("Grafo guardado como borrador","success")}>Guardar</Button><Button onClick={()=>validate()}>Validar</Button><Button variant="primary" onClick={()=>{if(validate(false)){setPublished(true);notify("Workflow v1.3 publicado correctamente","success")}}}>Publicar</Button></div></div>
+  return (
+    <div className="builder-shell">
+    <div className="builder-top"><div><Button variant="ghost" icon="arrow" onClick={()=>navigate("Workflow Detail")}>Volver</Button><div><strong>Alta hospitalaria estándar</strong><span>v1.3 — {published?"Publicado · solo lectura":"Borrador editable"} · grafo dirigido</span></div></div><div><Button variant="ghost" onClick={undo}>Deshacer</Button><Button variant="ghost" onClick={redo}>Rehacer</Button><Button icon="play" onClick={simulate}>{simulation===null?"Previsualizar":simulation>=maxLevel?"Reiniciar":"Siguiente etapa"}</Button><Button onClick={()=>notify("Borrador guardado localmente","success")}>Guardar borrador</Button><Button onClick={()=>{validate(false);setValidationOpen(true)}}>Validar</Button><Button variant="primary" onClick={()=>{if(published){notify("Esta versión ya está publicada y es inmutable","warning");return}if(validate(false))setPublishConfirm(true);else setValidationOpen(true)}}>{published?"Publicado":"Publicar"}</Button></div></div>
     <div className="builder-body"><aside className="components-panel"><h3>Nodos</h3><p>Agrega unidades al grafo</p>{componentList.map(item=><button key={item.type} onClick={()=>addNode(item.type)}><span><Icon name={item.icon}/></span><div><strong>{item.label}</strong><small>{item.hint}</small></div><Icon name="plus" size={15}/></button>)}<div className="builder-help"><Icon name="flow"/><div><strong>Dependencias reales</strong><span>Selecciona un nodo y agrega uno o varios predecesores desde el panel derecho.</span></div></div><div className="graph-legend"><strong>Simulación</strong><span><i className="sim-running"/>Ejecutando ahora</span><span><i className="sim-complete"/>Completado</span><span><i/>Esperando dependencias</span></div></aside>
     <main className="canvas graph-canvas" onMouseMove={onMove} onMouseUp={()=>setDragging(null)} onMouseLeave={()=>setDragging(null)}><div className="canvas-grid"/><div className="zoom-tools"><button onClick={()=>setZoom(z=>Math.max(45,z-10))}>−</button><span>{zoom}%</span><button onClick={()=>setZoom(z=>Math.min(120,z+10))}>+</button><button title="Ajustar vista" onClick={()=>setZoom(75)}><Icon name="eye" size={15}/></button></div><div className="canvas-meta"><Badge tone={published?"success":"warning"}>{published?"Publicado":"Cambios sin publicar"}</Badge><span>{nodes.length} nodos · {relationCount} relaciones</span></div>
       <div className="graph-stage" style={{transform:`scale(${zoom/100})`,transformOrigin:"top left"}}><svg className="graph-edges" width="1900" height="760" viewBox="0 0 1900 760"><defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z"/></marker></defs>{nodes.flatMap(node=>node.dependencies.map(depId=>{const dep=nodes.find(n=>n.id===depId);if(!dep)return null;const x1=dep.x+220,y1=dep.y+55,x2=node.x,y2=node.y+55,curve=Math.max(50,(x2-x1)/2);return <g key={`${depId}-${node.id}`}><path className={`edge edge-${executionState(node)}`} d={`M${x1},${y1} C${x1+curve},${y1} ${x2-curve},${y2} ${x2},${y2}`} markerEnd="url(#arrowhead)"/><text x={(x1+x2)/2} y={(y1+y2)/2-7}>{node.activation==="all"?"TODAS":"CUALQUIERA"}</text></g>}))}</svg>
@@ -335,11 +444,46 @@ function WorkflowBuilder() {
       {selected.type==="condition"&&<><label>Campo a evaluar<select value={selected.field} onChange={e=>update("field",e.target.value)}><option>Tipo de alta</option><option>Requiere copago</option><option>Servicio</option><option>Estado de facturación</option></select></label><label>Operador<select value={selected.operator} onChange={e=>update("operator",e.target.value)}><option>Es igual a</option><option>No es igual a</option><option>Contiene</option></select></label><label>Valor<input value={selected.value} onChange={e=>update("value",e.target.value)}/></label></>}
       {selected.type==="join"&&<label>Estrategia de unión<select value={selected.strategy} onChange={e=>update("strategy",e.target.value)}><option>Esperar todas</option><option>Continuar con la primera</option><option>Esperar rutas obligatorias</option></select></label>}
       {selected.type!=="start"&&<div className="dependency-editor"><div className="dependency-head"><div><h4>Dependencias</h4><span>Qué debe terminar antes</span></div><Badge tone={selected.dependencies.length>1?"info":"neutral"}>{selected.dependencies.length}</Badge></div><label>Política de activación<select value={selected.activation} onChange={e=>update("activation",e.target.value)}><option value="all">Todas las dependencias</option><option value="any">Cualquiera de las dependencias</option></select></label><div className="dependency-list">{selected.dependencies.length===0&&<p>Este nodo todavía no tiene predecesores.</p>}{selected.dependencies.map(id=>{const dep=nodes.find(n=>n.id===id);return <div key={id}><span><Icon name={dep?nodeIcon(dep.type):"flow"} size={12}/>{dep?.name||"Nodo eliminado"}</span><button onClick={()=>removeDependency(id)}><Icon name="close" size={12}/></button></div>})}</div><div className="add-dependency"><select value={dependencyCandidate} onChange={e=>setDependencyCandidate(Number(e.target.value))}>{nodes.filter(n=>n.id!==selected.id).map(n=><option key={n.id} value={n.id}>{n.name}</option>)}</select><Button icon="plus" onClick={addDependency}>Conectar</Button></div><div className="dependency-note"><Icon name="spark"/><span>{selected.activation==="all"?"Se ejecutará cuando todos los predecesores terminen.":"Se ejecutará cuando termine cualquiera de sus predecesores."}</span></div></div>}
-      <div className="config-actions"><Button variant="primary" icon="check" onClick={()=>{setHistory(h=>[...h,nodes]);notify("Nodo y relaciones guardados","success")}}>Guardar cambios</Button>{selected.type!=="start"&&selected.type!=="end"&&<Button variant="danger" onClick={()=>removeNode(selected.id)}>Eliminar nodo</Button>}</div></aside></div>
-  </div>;
+      <div className="config-actions"><Button variant="primary" icon="check" onClick={()=>published?notify("La versión publicada es de solo lectura","warning"):(setHistory(h=>[...h,nodes]),notify("Nodo y relaciones guardados","success"))}>Guardar cambios</Button>{selected.type!=="start"&&selected.type!=="end"&&<Button variant="danger" onClick={()=>removeNode(selected.id)}>Eliminar nodo</Button>}</div></aside></div>
+    {validationOpen&&<><div className="builder-overlay" onClick={()=>setValidationOpen(false)}/><aside className="validation-panel"><div className="drawer-head"><div><span>VALIDACIÓN DE LA DEFINICIÓN</span><h2>Lista para publicar</h2></div><button className="icon-button" onClick={()=>setValidationOpen(false)}><Icon name="close"/></button></div><div className="validation-summary"><div><strong>0</strong><span>Errores bloqueantes</span></div><div><strong>2</strong><span>Advertencias</span></div></div><div className="validation-body"><div className="validation-success"><Icon name="check"/><div><strong>La estructura del grafo es válida</strong><span>Existe un inicio, un final alcanzable y todas las tareas tienen interventor y SLA válidos.</span></div></div><h3>Advertencias</h3>{[["Plan de egreso","La descripción podría incluir el criterio de finalización.",2],["Gestión de copago","Revisa si el SLA de 20 minutos aplica para todos los servicios.",5]].map(item=><button key={item[0]} onClick={()=>{setSelectedId(Number(item[2]));setValidationOpen(false)}}><Icon name="alert"/><div><strong>{item[0]}</strong><span>{item[1]}</span></div><Icon name="arrow" size={14}/></button>)}<div className="dependency-note"><Icon name="flow"/><span>Las uniones con múltiples entradas esperan todas las tareas predecesoras cuando la política es “Todas”.</span></div></div><div className="drawer-actions"><Button onClick={()=>setValidationOpen(false)}>Cerrar</Button><Button variant="primary" onClick={()=>{setValidationOpen(false);setPublishConfirm(true)}}>Continuar a publicación</Button></div></aside></>}
+    {publishConfirm&&<><div className="builder-overlay" onClick={()=>setPublishConfirm(false)}/><div className="confirm-dialog"><span className="confirm-icon"><Icon name="layers"/></span><h2>Publicar versión v1.3</h2><p>Esta acción hará inmutable la versión. Las ejecuciones activas continuarán con su versión actual y solo las nuevas usarán v1.3.</p><div><Button onClick={()=>setPublishConfirm(false)}>Cancelar</Button><Button variant="primary" onClick={()=>{setPublishConfirm(false);setPublished(true);notify("Workflow v1.3 publicado correctamente","success")}}>Confirmar publicación</Button></div></div></>}
+    </div>
+  )
 }
+
 function typeLabelFor(type:"start"|"task"|"condition"|"split"|"join"|"end"){
   return {start:"INICIO",task:"TAREA",condition:"CONDICIÓN",split:"DIVISIÓN",join:"UNIÓN",end:"FIN"}[type];
+}
+
+const executionRows = [
+  {id:"EXE-2025-0482",patient:"Juan Pérez",bed:"304-A",service:"Hospitalización Adultos",workflow:"Alta hospitalaria estándar",version:"v1.2",start:"24 Jun · 08:42",status:"ACTIVE",task:"2 tareas activas",elapsed:"1h 18m",sla:"Vencido"},
+  {id:"EXE-2025-0481",patient:"Laura Gómez",bed:"305-A",service:"Hospitalización Adultos",workflow:"Alta hospitalaria estándar",version:"v1.2",start:"24 Jun · 08:15",status:"ACTIVE",task:"Realizar limpieza terminal",elapsed:"1h 45m",sla:"En riesgo"},
+  {id:"EXE-2025-0479",patient:"María Torres",bed:"308-B",service:"Hospitalización Adultos",workflow:"Alta con coordinación",version:"v2.0",start:"24 Jun · 07:31",status:"COMPLETED",task:"Proceso finalizado",elapsed:"1h 06m",sla:"Cumplido"},
+  {id:"EXE-2025-0475",patient:"Andrés Díaz",bed:"402-A",service:"UCI",workflow:"Preparación y liberación",version:"v1.1",start:"23 Jun · 18:20",status:"FAILED",task:"Acción automática fallida",elapsed:"2h 12m",sla:"Vencido"},
+];
+
+function WorkflowExecutions() {
+  const { navigate }=useApp();
+  return <><WorkflowNav current="executions"/><PageHeader title="Ejecuciones" subtitle="Consulta el avance de los procesos asociados a las altas hospitalarias."/><DemoNote/>
+    <div className="workflow-kpis execution-kpis">{[["14","Ejecuciones activas","play"],["126","Completadas hoy","check"],["4","Con tareas vencidas","alert"],["1h 14m","Tiempo promedio","clock"]].map(x=><div key={x[1]}><span><Icon name={x[2] as IconName}/></span><div><strong>{x[0]}</strong><small>{x[1]}</small></div></div>)}</div>
+    <div className="filters execution-filters"><div className="search small-search"><Icon name="search"/><input placeholder="Paciente, alta o identificador..."/></div>{["Workflow","Versión","Estado","Servicio","Rango de fechas","SLA vencido","Interventor"].map(x=><SelectPill key={x}>{x}</SelectPill>)}<button className="clear-filter">Limpiar</button></div>
+    <section className="panel execution-table"><div className="result-head"><span>Mostrando <strong>4 ejecuciones demostrativas</strong></span><span>Actualizado hace 30 segundos</span></div><div className="table-wrap"><table><thead><tr><th>Alta / Proceso</th><th>Paciente</th><th>Cama</th><th>Servicio</th><th>Workflow</th><th>Versión</th><th>Inicio</th><th>Estado</th><th>Tarea actual</th><th>Transcurrido</th><th>SLA</th></tr></thead><tbody>{executionRows.map(row=><tr key={row.id} onClick={()=>navigate("Execution Detail")}><td><strong>{row.id}</strong></td><td>{row.patient}</td><td><button className="bed-link" onClick={event=>{event.stopPropagation();navigate("Camas")}}>{row.bed}</button></td><td>{row.service}</td><td>{row.workflow}</td><td>{row.version}</td><td>{row.start}</td><td><Badge tone={row.status==="COMPLETED"?"success":row.status==="FAILED"?"danger":"info"}>{row.status}</Badge></td><td>{row.task}</td><td>{row.elapsed}</td><td><Badge tone={row.sla==="Vencido"?"danger":row.sla==="En riesgo"?"warning":"success"}>{row.sla==="Vencido"?"⚠ ":""}{row.sla}</Badge></td></tr>)}</tbody></table></div></section>
+  </>;
+}
+
+function ExecutionDetail() {
+  const { navigate }=useApp();
+  const [taskOpen,setTaskOpen]=useState(false);
+  const tasks=[["Validar orden de alta","Enfermería","COMPLETED","María López","08:45","08:52","15 min","Cumplido"],["Confirmar salida del paciente","Enfermería","COMPLETED","Laura Mejía","08:53","09:03","20 min","Cumplido"],["Retirar pertenencias","Enfermería","ACTIVE","María López","09:04","—","20 min","Vencido"],["Realizar limpieza terminal","Servicios Generales","ACTIVE","Carlos Páez","09:18","—","30 min","En riesgo"],["Actualizar estado de la cama","Sistema","PENDING","—","—","—","5 min","Pendiente"]];
+  return <><WorkflowNav current="executions"/><div className="detail-back"><Button variant="ghost" icon="arrow" onClick={()=>navigate("Workflow Executions")}>Volver a ejecuciones</Button></div>
+    <PageHeader title="EXE-2025-0482" subtitle="Alta ALT-2025-1048 · Juan Pérez" actions={<Button icon="bed" onClick={()=>navigate("Camas")}>Ver Kardex de cama 304-A</Button>}/>
+    <div className="execution-hero panel"><div><span>EJECUCIÓN ACTIVA</span><h2>Alta hospitalaria estándar <small>v1.2</small></h2><p>Hospitalización Adultos · Cama 304-A · Inició 24 Jun 2025, 08:42</p></div><div className="execution-time"><Badge tone="info">ACTIVE</Badge><strong>1h 18m</strong><span>Tiempo transcurrido</span></div></div>
+    <div className="operation-strip">{[["60%","Progreso"],["2 de 5","Completadas"],["2","Activas"],["1","Pendiente de habilitación"],["1","SLA vencido"],["09:18","Último evento"]].map(x=><div key={x[1]}><strong>{x[0]}</strong><span>{x[1]}</span></div>)}</div>
+    <section className="panel execution-graph"><div className="panel-title"><div><h2>Grafo de ejecución</h2><span className="live-dot">SOLO LECTURA</span></div><span className="panel-note">Las dependencias pendientes se calculan desde el grafo</span></div><div className="runtime-flow">{[["Alta médica","done"],["Validar orden","done"],["Retirar pertenencias","active"],["Limpieza terminal","late"],["Actualizar cama","waiting"],["Cama disponible","waiting"]].map((n,i)=><div className={`runtime-step ${n[1]}`} key={n[0]} onClick={()=>i>1&&setTaskOpen(true)}><span>{n[1]==="done"?<Icon name="check" size={14}/>:n[1]==="waiting"?<Icon name="clock" size={14}/>:<Icon name="play" size={14}/>}</span><strong>{n[0]}</strong><small>{n[1]==="waiting"?"Pendiente de habilitación":n[1]==="done"?"Completado":n[1]==="late"?"En proceso · SLA vencido":"En proceso"}</small></div>)}</div></section>
+    <div className="execution-layout"><section className="panel"><div className="panel-title"><div><h2>Tareas de la ejecución</h2></div></div><div className="table-wrap"><table><thead><tr><th>Tarea</th><th>Interventor</th><th>Estado</th><th>Reclamada por</th><th>Inicio</th><th>Finalización</th><th>SLA</th><th>Cumplimiento</th></tr></thead><tbody>{tasks.map(t=><tr key={t[0]} onClick={()=>setTaskOpen(true)}><td><strong>{t[0]}</strong></td><td>{t[1]}</td><td><Badge tone={t[2]==="COMPLETED"?"success":t[2]==="ACTIVE"?"info":"neutral"}>{t[2]}</Badge></td><td>{t[3]}</td><td>{t[4]}</td><td>{t[5]}</td><td>{t[6]}</td><td><Badge tone={t[7]==="Vencido"?"danger":t[7]==="En riesgo"?"warning":t[7]==="Cumplido"?"success":"neutral"}>{t[7]}</Badge></td></tr>)}</tbody></table></div></section>
+    <section className="panel event-timeline"><div className="panel-title"><div><h2>Línea de tiempo</h2></div></div>{[["09:18","Tarea habilitada","Limpieza terminal fue asignada a Servicios Generales."],["09:04","Tarea iniciada","María López reclamó Retirar pertenencias."],["09:03","Tarea completada","Salida del paciente confirmada dentro del SLA."],["08:42","Ejecución iniciada","Se creó la ejecución con la versión v1.2."]].map((e,i)=><div className="event-item" key={e[0]}><span><Icon name={i===0?"play":"check"} size={13}/></span><div><small>{e[0]} · 24 Jun 2025</small><strong>{e[1]}</strong><p>{e[2]}</p></div></div>)}</section></div>
+    {taskOpen&&<><div className="drawer-backdrop" onClick={()=>setTaskOpen(false)}/><aside className="drawer task-history"><div className="drawer-head"><div><span>HISTORIAL DE TAREA · TASK-5003</span><h2>Retirar pertenencias</h2></div><button className="icon-button" onClick={()=>setTaskOpen(false)}><Icon name="close"/></button></div><div className="task-history-body"><Badge tone="danger">ACTIVE · SLA VENCIDO</Badge><p>Retirar objetos personales y validar entrega con el acompañante antes de liberar la habitación.</p><div className="metadata-grid">{[["Interventor","Enfermería"],["Reclamada por","María López"],["Asignación","09:03"],["Inicio","09:04"],["Finalización","—"],["Duración esperada","15 min"],["SLA","20 min"],["Duración real","34 min y contando"]].map(x=><div key={x[0]}><span>{x[0]}</span><strong>{x[1]}</strong></div>)}</div><h3>Eventos de la tarea</h3>{[["09:24","SLA incumplido","El tiempo máximo de 20 minutos fue superado."],["09:04","Tarea iniciada","María López inició la tarea."],["09:03","Tarea reclamada","La tarea fue reclamada por María López."],["09:03","Tarea habilitada","Todas las dependencias fueron completadas."]].map((e,i)=><div className="event-item" key={e[0]}><span><Icon name={i===0?"alert":"history"} size={13}/></span><div><small>{e[0]} · 24 Jun 2025</small><strong>{e[1]}</strong><p>{e[2]}</p></div></div>)}</div></aside></>}
+  </>;
 }
 
 function Analytics() {
@@ -354,9 +498,7 @@ function Analytics() {
 function Notifications({ setPage }:{setPage:(p:Page)=>void}) {
   const { unread, readAll, notify } = useApp();
   const notes=[["Nueva tarea","Retiro de dispositivos","Habitación 304","Hace 2 minutos","info"],["SLA próximo a vencer","Facturación","Habitación 201","Hace 5 minutos","warning"],["SLA vencido","Servicios Generales","Habitación 402","Hace 8 minutos","danger"],["Cama disponible","Desinfección completada","Habitación 306","Hace 14 minutos","success"]];
-  return <>
-    <PageHeader title="Notificaciones" subtitle="Mantente al día con la operación en tiempo real." actions={<Button onClick={()=>{readAll();notify("Todas las notificaciones fueron marcadas como leídas","success")}}>Marcar todas como leídas</Button>}/>
-    <div className="tabs"><button className="active">Todas 12</button><button>No leídas {unread}</button></div><section className="panel notifications-list">{notes.map((n,i)=><button key={n[0]+i} onClick={()=>{if(n[0]==="Nueva tarea")setPage("Mis tareas");else notify(`${n[1]} — ${n[2]}`,n[4] as Tone)}}><div className={`note-icon note-${n[4]}`}><Icon name={n[4]==="danger"?"alert":n[4]==="success"?"check":n[4]==="warning"?"clock":"bell"}/></div><div><span>{n[0].toUpperCase()}</span><strong>{n[1]}</strong><p>{n[2]} · {n[3]}</p></div>{i<unread&&<i className="unread"/>}<Icon name="chevron"/></button>)}</section></>;
+  return <><PageHeader title="Notificaciones" subtitle="Mantente al día con la operación en tiempo real." actions={<Button onClick={()=>{readAll();notify("Todas las notificaciones fueron marcadas como leídas","success")}}>Marcar todas como leídas</Button>}/><div className="tabs"><button className="active">Todas 12</button><button>No leídas {unread}</button></div><section className="panel notifications-list">{notes.map((n,i)=><button key={n[0]+i} onClick={()=>{if(n[0]==="Nueva tarea")setPage("Mis tareas");else notify(`${n[1]} — ${n[2]}`,n[4] as Tone)}}><div className={`note-icon note-${n[4]}`}><Icon name={n[4]==="danger"?"alert":n[4]==="success"?"check":n[4]==="warning"?"clock":"bell"}/></div><div><span>{n[0].toUpperCase()}</span><strong>{n[1]}</strong><p>{n[2]} · {n[3]}</p></div>{i<unread&&<i className="unread"/>}<Icon name="chevron"/></button>)}</section></>;
 }
 
 const documentation = [
@@ -456,49 +598,33 @@ function GenericPage({ page }: { page: Page }) {
     </tbody></table></div></section></>;
 }
 
-export default function Prueba() {
-    const [page, setPage] = useState<Page>("Dashboard");
-    const [menu, setMenu] = useState(false);
-    const [selectedBed, setSelectedBed] = useState<typeof beds[number] | null>(null);
-    const [taskStatuses, setTaskStatuses] = useState<TaskStatus[]>(["Pendiente","En proceso","Pendiente"]);
-    const [unread, setUnread] = useState(3);
-    const [toast, setToast] = useState<{message:string;tone:Tone}|null>(null);
-    const notify = (message:string,tone:Tone="info") => {
-        setToast({message,tone});
-        window.setTimeout(()=>setToast(null),3200);
-    };
-    const context: AppContextValue = {
-        navigate: setPage,
-        notify,
-        taskStatuses,
-        updateTask: (index,status)=>setTaskStatuses(current=>current.map((value,i)=>i===index?status:value)),
-        unread,
-        readAll: ()=>setUnread(0),
-    };
-    const content = page === "Dashboard" ? <Dashboard setPage={setPage} openBed={setSelectedBed}/> :
-        page === "Giro de camas" || page === "Camas" ? <BedsPage openBed={setSelectedBed}/> :
-        page === "Mis tareas" ? <Tasks/> : page === "Workflows" ? <Workflows setPage={setPage}/> :
-        page === "Workflow Builder" ? <WorkflowBuilder/> : page === "Analytics" ? <Analytics/> :
-        page === "Notificaciones" ? <Notifications setPage={setPage}/> : page === "Documentación" ? <Documentation/> :
-        page === "Interventores" ? <Interveners/> : page === "Servicios" ? <ServicesPage/> :
-        page === "Configuración" ? <SettingsPage/> : <GenericPage page={page}/>;
-
-    return <AppContext.Provider value={context}>
-        <div className="app-shell">
-            <Sidebar page={page} setPage={setPage} open={menu} close={()=>setMenu(false)}/>
-            <div className="app-main">
-                <Topbar page={page} toggleMenu={()=>setMenu(!menu)} setPage={setPage}/>
-                <main className={`content ${page==="Workflow Builder"?"builder-content":""}`}>{content}</main>
-            </div>
-            
-            {selectedBed && <BedDrawer bed={selectedBed} close={()=>setSelectedBed(null)}/>}
-                
-            <div className={`toast ${toast?`show toast-${toast.tone}`:""}`}>
-                {toast && <> 
-                    <Icon name={toast.tone==="success"?"check":toast.tone==="danger"?"alert":"bell"}/>
-                    <span>{toast.message}</span>
-                </>}
-            </div>
-        </div>
-    </AppContext.Provider>;
+export default function App() {
+  const [page, setPage] = useState<Page>("Dashboard");
+  const [menu, setMenu] = useState(false);
+  const [selectedBed, setSelectedBed] = useState<typeof beds[number] | null>(null);
+  const [taskStatuses, setTaskStatuses] = useState<TaskStatus[]>(["Pendiente","En proceso","Pendiente"]);
+  const [unread, setUnread] = useState(3);
+  const [toast, setToast] = useState<{message:string;tone:Tone}|null>(null);
+  const notify = (message:string,tone:Tone="info") => {
+    setToast({message,tone});
+    window.setTimeout(()=>setToast(null),3200);
+  };
+  const context: AppContextValue = {
+    navigate: setPage,
+    notify,
+    taskStatuses,
+    updateTask: (index,status)=>setTaskStatuses(current=>current.map((value,i)=>i===index?status:value)),
+    unread,
+    readAll: ()=>setUnread(0),
+  };
+  const content = page === "Dashboard" ? <Dashboard setPage={setPage} openBed={setSelectedBed}/> :
+    page === "Giro de camas" || page === "Camas" ? <BedsPage openBed={setSelectedBed}/> :
+    page === "Mis tareas" ? <Tasks/> : page === "Workflows" ? <Workflows setPage={setPage}/> :
+    page === "Workflow Detail" ? <WorkflowDetail/> : page === "Versiones" ? <WorkflowVersions/> :
+    page === "Workflow Executions" ? <WorkflowExecutions/> : page === "Execution Detail" ? <ExecutionDetail/> :
+    page === "Workflow Builder" ? <WorkflowBuilder/> : page === "Analytics" ? <Analytics/> :
+    page === "Notificaciones" ? <Notifications setPage={setPage}/> : page === "Documentación" ? <Documentation/> :
+    page === "Interventores" ? <Interveners/> : page === "Servicios" ? <ServicesPage/> :
+    page === "Configuración" ? <SettingsPage/> : <GenericPage page={page}/>;
+  return <AppContext.Provider value={context}><div className="app-shell"><Sidebar page={page} setPage={setPage} open={menu} close={()=>setMenu(false)}/><div className="app-main"><Topbar page={page} toggleMenu={()=>setMenu(!menu)} setPage={setPage}/><main className={`content ${page==="Workflow Builder"?"builder-content":""}`}>{content}</main></div>{selectedBed&&<BedDrawer bed={selectedBed} close={()=>setSelectedBed(null)}/>}<div className={`toast ${toast?`show toast-${toast.tone}`:""}`}>{toast&&<><Icon name={toast.tone==="success"?"check":toast.tone==="danger"?"alert":"bell"}/><span>{toast.message}</span></>}</div></div></AppContext.Provider>;
 }

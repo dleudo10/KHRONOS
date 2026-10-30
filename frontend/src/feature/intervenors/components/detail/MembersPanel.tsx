@@ -4,19 +4,19 @@ import Button from "../../../../components/ui/Button";
 import Icon from "../../../../components/ui/Icon";
 import { MEMBER_PAGE_SIZES } from "../../constants";
 import { useAddMember } from "../../hooks/useAddMember";
-import { useAnchoredMenu } from "../../hooks/useAnchoredMenu";
-import { useDebouncedValue } from "../../hooks/useDebouncedValue";
-import { useEscapeKey } from "../../hooks/useEscapeKey";
+import { useAnchoredMenu } from "../../../../hooks/useAnchoredMenu";
+import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
+import { useEscapeKey } from "../../../../hooks/useEscapeKey";
 import { useGetMembers } from "../../hooks/useGetMembers";
 import { useRemoveMember } from "../../hooks/useRemoveMember";
 import { useSetLeader } from "../../hooks/useSetLeader";
 import type { Intervenor } from "../../types/intervenor.types";
 import type { AddMemberPayload, IntervenorMember, MemberStatusFilter } from "../../types/member.types";
-import { Pagination } from "../shared/Pagination";
+import { Pagination } from "../../../../components/common/Pagination";
 import EmptyMembers from "./EmptyMembers";
-import { MemberActionsMenu } from "./MemberActionsMenu";
 import { MemberDrawer } from "./MemberDrawer";
 import MembersTable from "./MembersTable";
+import { ActionsMenu } from "../../../../components/common/ActionsMenu";
 
 type MembersPanelProps = {
     intervenor: Intervenor;
@@ -62,6 +62,9 @@ export function MembersPanel({ intervenor }: MembersPanelProps) {
 
     const hasFilters = search.trim() !== "" || status !== "all";
     const menuMember = menu.anchor ? members.find(m => m.id === menu.anchor?.id) : undefined;
+    const cannotLead = menuMember
+        ? !menuMember.is_leader && !menuMember.user.is_active
+        : false;
 
     const clearFilters = () => {
         setSearch("");
@@ -175,20 +178,43 @@ export function MembersPanel({ intervenor }: MembersPanelProps) {
             </div>
 
             {menu.anchor && menuMember && (
-                <MemberActionsMenu
-                    member={menuMember}
+                <ActionsMenu
                     top={menu.anchor.top}
                     right={menu.anchor.right}
                     onClose={menu.close}
-                    onToggleLeader={() => { 
-                        menu.close(); 
-                        handleToggleLeader(menuMember); 
-                    }}
-                    onRemove={() => { 
-                        menu.close(); 
-                        setMemberToRemove(menuMember); 
-                    }}
-                />
+                >
+                    <button
+                        type="button"
+                        role="menuitem"
+                        disabled={cannotLead}
+                        title={
+                            cannotLead
+                                ? "Un usuario no disponible no puede ser líder"
+                                : undefined
+                        }
+                        onClick={() => handleToggleLeader(menuMember)}
+                    >
+                        <Icon name="spark" size={15} />
+                        {menuMember.is_leader
+                            ? "Quitar liderazgo"
+                            : "Nombrar líder"}
+                    </button>
+
+                    <div className="ivr-menu-sep" />
+
+                    <button
+                        type="button"
+                        role="menuitem"
+                        className="danger"
+                        onClick={() => {
+                            setMemberToRemove(menuMember);
+                            menu.close();
+                        }}
+                    >
+                        <Icon name="logout" size={15} />
+                        Quitar del equipo
+                    </button>
+                </ActionsMenu>
             )}
 
             {drawerOpen && (

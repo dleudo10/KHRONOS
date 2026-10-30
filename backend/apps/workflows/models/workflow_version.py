@@ -7,12 +7,21 @@ class WorkflowVersionStatus(models.TextChoices):
     PUBLISHED = "published", "Publicado"
     ARCHIVED = "archived", "Archivado"
 
-
 class WorkflowVersion(models.Model):
     workflow = models.ForeignKey(Workflow, on_delete=models.PROTECT, related_name="versions")
     version_number = models.PositiveIntegerField()
     status = models.CharField(max_length=20, choices=WorkflowVersionStatus.choices, default=WorkflowVersionStatus.DRAFT)
+    created_at = models.DateTimeField(
+        "fecha de creación",
+        auto_now_add=True
+    )
     
+    published = models.DateTimeField("fecha de publicación", null=True, blank=True)
+    
+    updated_at = models.DateTimeField( 
+        "fecha de actualización",
+        auto_now=True
+    )
     class Meta:
         db_table = "workflow_version"
         ordering = ["workflow", "-version_number"]
@@ -27,6 +36,11 @@ class WorkflowVersion(models.Model):
             models.CheckConstraint(
                 condition=Q(version_number__gte=1),
                 name="workflow_version_number_positive",
+            ),
+            models.UniqueConstraint(
+                fields=["workflow"],
+                condition=Q(status="published"),
+                name="workflow_single_published_version",
             ),
         ]
         

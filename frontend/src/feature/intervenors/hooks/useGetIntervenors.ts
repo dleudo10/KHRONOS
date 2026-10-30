@@ -12,4 +12,5 @@ export const useGetIntervenors = ({ page, pageSize, search, isActive }: QueryPro
                 signal,
             }),
         placeholderData: keepPreviousData,
-    });
+    }
+);

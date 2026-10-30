@@ -1,0 +1,2 @@
+export const MOBILE_LIST_BREAKPOINT = 640;
+export const STACKED_LAYOUT_BREAKPOINT = 1000;

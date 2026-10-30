@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { setLeader } from "../services/members.api";
-import { assertSuccess } from "../utils/assertSuccess";
+import { assertSuccess } from "../../../utils/assertSuccess";
 import { intervenorKeys } from "./queryKeys";
 import type { HandleLeader } from "../types/member.types";
 

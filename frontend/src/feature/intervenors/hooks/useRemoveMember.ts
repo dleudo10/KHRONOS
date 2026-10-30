@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { removeMember } from "../services/members.api";
-import { assertSuccess } from "../utils/assertSuccess";
+import { assertSuccess } from "../../../utils/assertSuccess";
 import { intervenorKeys } from "./queryKeys";
 
 export const useRemoveMember = (intervenorId: number) => {

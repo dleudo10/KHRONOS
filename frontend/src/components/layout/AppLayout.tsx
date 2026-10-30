@@ -6,7 +6,7 @@ import { useLayout } from "../../context/LayoutContext";
 const AppLayout = () => {
     const { isMobile, sidebarOpen, closeSidebar } = useLayout();
     const { pathname } = useLocation();
-    const isBuilder = pathname.startsWith("/workflow-builder");
+    const isBuilder = pathname.endsWith("/builder");
 
     return (
         <div className="app-shell">

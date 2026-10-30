@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import Button from "../../../../components/ui/Button";
 import Icon from "../../../../components/ui/Icon";
 import { initials } from "../../../../utils/initials";
-import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
 import { useGetAssignableUsers } from "../../hooks/useGetAssignableUsers";
 import type { Intervenor } from "../../types/intervenor.types";
 import type { AddMemberPayload } from "../../types/member.types";

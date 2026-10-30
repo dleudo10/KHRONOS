@@ -5,7 +5,7 @@ from .workflow_node import WorkflowNode
 
 class WorkflowTransitionConditionType(models.TextChoices):
     ALWAYS = "always", "Siempre"
-    RULE = "rule", "Condición"
+    RULE = "rule", "Condición"  
 
 class WorkflowTransition(models.Model):
     workflow_version = models.ForeignKey(WorkflowVersion, on_delete=models.PROTECT, related_name="transitions")
