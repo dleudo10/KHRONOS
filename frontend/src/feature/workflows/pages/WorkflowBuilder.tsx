@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import Icon from "../../../components/ui/Icon";
 import BuilderTop from "../components/details/BuilderTop";
 import { useDetailsWorkflow } from "../hooks/useDetailsWorkflow";
-import { type ComponentListType, type GraphTransition, type Issue, type NodeType, type WorkflowNode } from "../types/workflow.types";
+import { type ComponentListType, type GraphTransition, type Issue, type NodeType, type WorkflowGraphPayload, type WorkflowNode } from "../types/workflow.types";
 import ComponentsPanel from "../components/details/ComponentsPanel";
 import { activationOf } from "../utils/activationOf";
 import { uniqueCode } from "../utils/uniqueCode";
@@ -18,7 +18,7 @@ type Tone = "success" | "info" | "warning" | "danger" | "neutral";
 const componentList: ComponentListType[] = [
     { type: "start", label: "Inicio", icon: "play", hint: "Punto de entrada" },
     { type: "task", label: "Tarea", icon: "check", hint: "Unidad ejecutable" },
-    { type: "system_action", label: "Sistema", icon: "flow", hint: "Acción ejecutada automáticamente por el sistema" },
+    { type: "system_action", label: "Sistema", icon: "flow", hint: "Intervención por el sistema" },
     { type: "end", label: "Fin", icon: "check", hint: "Cierre del flujo" },
 ];
 
@@ -247,6 +247,12 @@ const WorkflowBuilder = () => {
         notify("Nodo y sus relaciones fueron eliminados", "success");
     };
 
+    const updateTransition = (transitionId: number, patch: Partial<GraphTransition>) => {
+        if (guardReadOnly()) return;
+        setTransitions((cur) => cur.map((t) => (t.id === transitionId ? { ...t, ...patch } : t)));
+        setDirty(true);
+    };
+
     /* ── Validación ── */
     const validateGraph = (): { errors: Issue[]; warnings: Issue[] } => {
         const errors: Issue[] = [];
@@ -305,7 +311,7 @@ const WorkflowBuilder = () => {
     const validation = validationOpen ? validateGraph() : null;
 
     /* ── Payload hacia el backend ── */
-    const buildPayload = () => ({
+    const buildPayload = (): Omit<WorkflowGraphPayload, "workflow_id" | "workflow_version_id"> => ({
         nodes: nodes.map((n) => {
             const isTask = n.node_type === "task";
             return {
@@ -334,7 +340,12 @@ const WorkflowBuilder = () => {
     });
 
     const persistGraph = async (): Promise<boolean> => {
-        const payload = buildPayload();
+        // const payload = buildPayload();
+        const payload = {
+            'workflow_id': workflowId,
+            'workflow_version_id': workflowVersionId,
+            ...buildPayload(),
+        }
         console.info("[WorkflowBuilder] payload", payload);
         return true;
     };
@@ -447,6 +458,7 @@ const WorkflowBuilder = () => {
                     incomingOf={incomingOf}
                     setDependencyCandidate={setDependencyCandidate}
                     removeNode={removeNode}
+                    updateTransition={updateTransition}
                 />
             </div>
 

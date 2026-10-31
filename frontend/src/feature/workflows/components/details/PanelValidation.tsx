@@ -75,18 +75,18 @@ const PanelValidation = ( {setValidationOpen, validation, setSelectedId, readOnl
                     </div>
                 </div>
                 <div className="drawer-actions">
-                            <Button onClick={() => setValidationOpen(false)}>Cerrar</Button>
-                            {!readOnly && validation.errors.length === 0 && (
-                                <Button
-                                    variant="primary"
-                                    onClick={() => {
-                                        setValidationOpen(false);
-                                        setPublishConfirm(true);
-                                    }}
-                                >
-                                    Continuar a publicación
-                                </Button>
-                            )}
+                    <Button onClick={() => setValidationOpen(false)}>Cerrar</Button>
+                    {!readOnly && validation.errors.length === 0 && (
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                setValidationOpen(false);
+                                setPublishConfirm(true);
+                            }}
+                        >
+                            Continuar a publicación
+                        </Button>
+                    )}
                 </div>
             </aside>
         </>

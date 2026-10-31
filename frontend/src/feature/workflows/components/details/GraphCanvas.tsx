@@ -3,7 +3,7 @@ import Badge, { type Tone } from "../../../../components/ui/Badge";
 import Icon from "../../../../components/ui/Icon";
 import { nodeIcon, type GraphTransition, type WorkflowNode } from "../../types/workflow.types";
 import { uniqueCode } from "../../utils/uniqueCode";
-import { INTERVENTOR_OPTIONS } from "../../types/const";
+import { INTERVENTOR_OPTIONS, SYSTEM_ACTION_OPTIONS } from "../../types/const";
 import { cfgStr } from "../../utils/cfgStr";
 import { activationOf } from "../../utils/activationOf";
 import { typeLabelFor } from "../../utils/typeLabelFor";
@@ -22,10 +22,10 @@ const NODE_PORT_Y = 55;
 type GraphCanvasProps = {
     readOnly: boolean;
     snapshot: () => void;
-    nodes: WorkflowNode[]; 
-    setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>;    
+    nodes: WorkflowNode[];
+    setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>;
     setDirty: React.Dispatch<React.SetStateAction<boolean>>;
-    dirty: boolean,
+    dirty: boolean;
     guardReadOnly: () => boolean;
     notify: (message: string, tone?: Tone) => void;
     tempId: React.RefObject<number>;
@@ -38,17 +38,17 @@ type GraphCanvasProps = {
     levels: Map<number, number>;
     setDependencyCandidate: React.Dispatch<React.SetStateAction<number | null>>;
     removeNode: (id: number) => void;
-}
+};
 
 const GraphCanvas = ({
-    readOnly, 
-    snapshot, 
-    nodes, 
-    setNodes, 
-    setDirty, 
+    readOnly,
+    snapshot,
+    nodes,
+    setNodes,
+    setDirty,
     dirty,
-    guardReadOnly, 
-    notify, 
+    guardReadOnly,
+    notify,
     tempId,
     incomingOf,
     commitGraph,
@@ -58,14 +58,14 @@ const GraphCanvas = ({
     simulation,
     levels,
     setDependencyCandidate,
-    removeNode
+    removeNode,
 }: GraphCanvasProps) => {
     const [zoom, setZoom] = useState(75);
     const [dragging, setDragging] = useState<DraggingType | null>(null);
 
     const dragMoved = useRef(false);
     const relationCount = transitions.length;
-    
+
     /* ── Drag & drop ── */
     const onMove = (event: React.MouseEvent<HTMLElement>) => {
         if (!dragging || readOnly) return;
@@ -138,6 +138,27 @@ const GraphCanvas = ({
     const interventorName = (id: number | null) =>
         id === null ? "Sin interventor" : (INTERVENTOR_OPTIONS.find((i) => i.id === id)?.name ?? `Interventor #${id}`);
 
+    const systemActionName = (node: WorkflowNode) => {
+        const value = cfgStr(node, "action", "");
+        if (!value) return "Sin acción";
+        return SYSTEM_ACTION_OPTIONS.find((a) => a.value === value)?.label ?? value;
+    };
+
+    /** Etiqueta de una arista: la regla vive en la transición, no en un nodo. */
+    const edgeLabel = (t: GraphTransition, src: WorkflowNode, tgt: WorkflowNode) => {
+        if (t.condition_type === "rule") {
+            const value = String(t.condition_config?.value ?? "").trim();
+            return `SI ${value || "…"}`;
+        }
+        const hasRules = transitions.some(
+            (o) => o.source_node === src.id && o.condition_type === "rule",
+        );
+        if (hasRules) return "POR DEFECTO";
+        if (incomingOf(tgt.id).length > 1)
+            return activationOf(tgt) === "all" ? "TODAS" : "CUALQUIERA";
+        return "";
+    };
+
     return (
         <main
             className="canvas graph-canvas"
@@ -186,12 +207,7 @@ const GraphCanvas = ({
                         const x2 = tgt.position_x;
                         const y2 = tgt.position_y + NODE_PORT_Y;
                         const curve = Math.max(50, Math.abs(x2 - x1) / 2);
-                        const label =
-                            src.node_type === ""
-                                ? `SI ${cfgStr(src, "value", "…")}`
-                                : incomingOf(tgt.id).length > 1
-                                  ? activationOf(tgt) === "all" ? "TODAS" : "CUALQUIERA"
-                                  : "";
+                        const label = edgeLabel(t, src, tgt);
 
                         return (
                             <g key={t.id}>
@@ -244,6 +260,11 @@ const GraphCanvas = ({
                                         {node.sla_minutes ?? "—"} min
                                     </p>
                                 )}
+                                {node.node_type === "system_action" && (
+                                    <p>
+                                        <Icon name="flow" size={12} /> {systemActionName(node)}
+                                    </p>
+                                )}
                                 <div className="dependency-count">
                                     <Icon name="flow" size={11} />
                                     {deps} dependencia{deps === 1 ? "" : "s"}
@@ -278,7 +299,7 @@ const GraphCanvas = ({
                 })}
             </div>
         </main>
-    )
-}
+    );
+};
 
-export default GraphCanvas
+export default GraphCanvas;

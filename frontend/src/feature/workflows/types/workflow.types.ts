@@ -6,11 +6,7 @@ export type Status =
     'published' | 
     'archived'
 
-export type NodeType = 
-    "start"|
-    "task"|
-    "system_action"|
-    "end";
+export type NodeType = "start" | "task" | "system_action" | "end";
 
 export type TransitionConditionType = "always" | "rule";
 
@@ -57,6 +53,32 @@ export type WorkflowTransition = {
     target_node_name: string;
     condition_type: TransitionConditionType;
     condition_config: Record<string, unknown>;
+};
+
+export type WorkflowGraphPayload = {
+    workflow_id: number;
+    workflow_version_id: number;
+    nodes: {
+        id: number | null;
+        client_id: number;
+        name: string;
+        code: string;
+        description: string;
+        node_type: NodeType;
+        interventor_id: number | null;
+        expected_duration_minutes: number | null;
+        sla_minutes: number | null;
+        position_x: number;
+        position_y: number;
+        configuration: Record<string, unknown>;
+    }[];
+    transitions: {
+        id: number | null;
+        source_node: number;
+        target_node: number;
+        condition_type: TransitionConditionType;
+        condition_config: Record<string, unknown>;
+    }[];
 };
 
 export type Versions = {
@@ -120,4 +142,3 @@ export const nodeIcon = (type: NodeType): IconName =>
 ;
 
 export type Issue = { nodeId?: number; title: string; message: string };
-

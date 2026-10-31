@@ -32,8 +32,8 @@ class WorkflowRepository:
         WorkflowNode.objects.bulk_create([
             WorkflowNode(
                 workflow_version=workflow_version,
-                name="Inicio",
-                code="INICIO",
+                name="Alta Médica",
+                code="ALT-MED",
                 description="Inicio del proceso",
                 node_type=WorkflowNodeTypeChoice.START,
                 position_x=50,
@@ -41,8 +41,8 @@ class WorkflowRepository:
             ),
             WorkflowNode(
                 workflow_version=workflow_version,
-                name="Fin",
-                code="FIN",
+                name="Cama Disponible",
+                code="CAM-DIS",
                 description="Fin del proceso",
                 node_type=WorkflowNodeTypeChoice.END,
                 position_x=350,
@@ -117,8 +117,8 @@ class WorkflowRepository:
         WorkflowNode.objects.bulk_create([
             WorkflowNode(
                 workflow_version=workflow_version,
-                name="Inicio",
-                code="INICIO",
+                name="Alta Médica",
+                code="ALT-MED",
                 description="Inicio del proceso",
                 node_type=WorkflowNodeTypeChoice.START,
                 position_x=50,
@@ -126,8 +126,8 @@ class WorkflowRepository:
             ),
             WorkflowNode(
                 workflow_version=workflow_version,
-                name="Fin",
-                code="FIN",
+                name="Cama Disponible",
+                code="CAM-DIS",
                 description="Fin del proceso",
                 node_type=WorkflowNodeTypeChoice.END,
                 position_x=350,

@@ -72,9 +72,17 @@ class WorkflowViewSet(SoftDeleteViewSet):
     
     @action(detail=True, methods=["post"], url_path="versions")
     def versions(self, request, pk=None):
+        validation_serializer = self.get_serializer(
+            data=request.data,
+            context={
+                **self.get_serializer_context(),
+                "workflow_id": pk
+            }
+        )
+        validation_serializer.is_valid(raise_exception=True)
         results = WorkflowRepository.new_version(workflow_id=pk)
         serializer = self.get_serializer(results)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=True, methods=["get"], url_path="details")
     def details(self, request, pk=None):

@@ -1,18 +1,25 @@
 import Badge, { type Tone } from "../../../../components/ui/Badge";
 import Button from "../../../../components/ui/Button";
 import Icon from "../../../../components/ui/Icon";
-import { INTERVENTOR_OPTIONS } from "../../types/const";
-import { nodeIcon, type GraphTransition, type NodeType, type WorkflowNode } from "../../types/workflow.types";
+import { INTERVENTOR_OPTIONS, SYSTEM_ACTION_OPTIONS } from "../../types/const";
+import { nodeIcon, type GraphTransition, type WorkflowNode } from "../../types/workflow.types";
 import { activationOf } from "../../utils/activationOf";
 import { cfgNum } from "../../utils/cfgNum";
 import { cfgStr } from "../../utils/cfgStr";
+import { typeLabelFor } from "../../utils/typeLabelFor";
+
+/* Deben coincidir con lo que el backend acepta en condition_config */
+const RULE_FIELDS = ["Tipo de alta", "Requiere copago", "Servicio", "Estado de facturación"];
+const RULE_OPERATORS = ["Es igual a", "No es igual a", "Contiene"];
+
+const ruleValue = (t: GraphTransition, key: string) => String(t.condition_config?.[key] ?? "");
 
 type NodeConfigPanelProps = {
-    selected: WorkflowNode | null 
+    selected: WorkflowNode | null;
     nodes: WorkflowNode[];
     dependencyCandidate: number | null;
     readOnly: boolean;
-    setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>;  
+    setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>;
     setDirty: React.Dispatch<React.SetStateAction<boolean>>;
     snapshot: () => void;
     transitions: GraphTransition[];
@@ -23,14 +30,15 @@ type NodeConfigPanelProps = {
     incomingOf: (id: number) => GraphTransition[];
     setDependencyCandidate: React.Dispatch<React.SetStateAction<number | null>>;
     removeNode: (id: number) => void;
-}
+    updateTransition: (id: number, patch: Partial<GraphTransition>) => void;
+};
 
 const NodeConfigPanel = ({
-    selected, 
-    nodes, 
-    dependencyCandidate, 
-    readOnly, 
-    setNodes, 
+    selected,
+    nodes,
+    dependencyCandidate,
+    readOnly,
+    setNodes,
     setDirty,
     snapshot,
     transitions,
@@ -41,16 +49,40 @@ const NodeConfigPanel = ({
     incomingOf,
     setDependencyCandidate,
     removeNode,
+    updateTransition,
 }: NodeConfigPanelProps) => {
+    const reaches = (from: number, target: number) => {
+        const seen = new Set<number>();
+        const stack = [from];
+        while (stack.length) {
+            const cur = stack.pop()!;
+            if (cur === target) return true;
+            if (seen.has(cur)) continue;
+            seen.add(cur);
+            transitions.filter((t) => t.source_node === cur).forEach((t) => stack.push(t.target_node));
+        }
+        return false;
+    };
+
+    const incoming = selected ? incomingOf(selected.id) : [];
+    const outgoing = selected ? transitions.filter((t) => t.source_node === selected.id) : [];
+
+    /* Candidatos: no Fin, no el mismo nodo, no ya conectados y que no generen ciclo */
+    const linked = new Set(incoming.map((t) => t.source_node));
     const candidateOptions = selected
-        ? nodes.filter((n) => n.id !== selected.id && n.node_type !== "end")
+        ? nodes.filter(
+              (n) =>
+                  n.id !== selected.id &&
+                  n.node_type !== "end" &&
+                  !linked.has(n.id) &&
+                  !reaches(selected.id, n.id),
+          )
         : [];
 
     const candidateId =
         candidateOptions.find((n) => n.id === dependencyCandidate)?.id ??
         candidateOptions[0]?.id ??
-        null
-    ;
+        null;
 
     const patchNode = (id: number, patch: Partial<WorkflowNode>) => {
         if (readOnly) return;
@@ -67,22 +99,9 @@ const NodeConfigPanel = ({
         );
         setDirty(true);
     };
-    
+
     const beginEdit = () => {
         if (!readOnly) snapshot();
-    };
-
-    const reaches = (from: number, target: number) => {
-        const seen = new Set<number>();
-        const stack = [from];
-        while (stack.length) {
-            const cur = stack.pop()!;
-            if (cur === target) return true;
-            if (seen.has(cur)) continue;
-            seen.add(cur);
-            transitions.filter((t) => t.source_node === cur).forEach((t) => stack.push(t.target_node));
-        }
-        return false;
     };
 
     const addDependency = () => {
@@ -114,17 +133,22 @@ const NodeConfigPanel = ({
         notify("Relación eliminada");
     };
 
-    const typeLabel = selected
-        ? ({
-              start: "Inicio",
-              task: "Tarea",
-              condition: "Condición",
-              split: "División paralela",
-              join: "Unión",
-              end: "Fin",
-          } as Record<NodeType, string>)[selected.node_type]
-        : ""
-    ;
+    /* Cambia una ruta entre "Siempre" y "Con regla" */
+    const setRouteMode = (t: GraphTransition, mode: "always" | "rule") => {
+        if (mode === "always") {
+            updateTransition(t.id, { condition_type: "always", condition_config: {} });
+        } else {
+            updateTransition(t.id, {
+                condition_type: "rule",
+                condition_config: { field: RULE_FIELDS[0], operator: RULE_OPERATORS[0], value: "" },
+            });
+        }
+    };
+
+    const patchRule = (t: GraphTransition, key: string, value: string) =>
+        updateTransition(t.id, { condition_config: { ...t.condition_config, [key]: value } });
+
+    const typeLabel = selected ? typeLabelFor(selected.node_type) : "";
 
     return (
         <aside className="config-panel">
@@ -168,6 +192,7 @@ const NodeConfigPanel = ({
                         />
                     </label>
 
+                    {/* ── TAREA: único tipo con interventor y tiempos ── */}
                     {selected.node_type === "task" && (
                         <>
                             <label>
@@ -267,63 +292,25 @@ const NodeConfigPanel = ({
                         </>
                     )}
 
-                    {selected.node_type === "condition" && (
-                        <>
-                            <label>
-                                Campo a evaluar
-                                <select
-                                    value={cfgStr(selected, "field", "Tipo de alta")}
-                                    disabled={readOnly}
-                                    onFocus={beginEdit}
-                                    onChange={(e) => patchConfig(selected.id, { field: e.target.value })}
-                                >
-                                    <option>Tipo de alta</option>
-                                    <option>Requiere copago</option>
-                                    <option>Servicio</option>
-                                    <option>Estado de facturación</option>
-                                </select>
-                            </label>
-                            <label>
-                                Operador
-                                <select
-                                    value={cfgStr(selected, "operator", "Es igual a")}
-                                    disabled={readOnly}
-                                    onFocus={beginEdit}
-                                    onChange={(e) => patchConfig(selected.id, { operator: e.target.value })}
-                                >
-                                    <option>Es igual a</option>
-                                    <option>No es igual a</option>
-                                    <option>Contiene</option>
-                                </select>
-                            </label>
-                            <label>
-                                Valor
-                                <input
-                                    value={cfgStr(selected, "value", "")}
-                                    disabled={readOnly}
-                                    onFocus={beginEdit}
-                                    onChange={(e) => patchConfig(selected.id, { value: e.target.value })}
-                                />
-                            </label>
-                        </>
-                    )}
-
-                    {selected.node_type === "join" && (
+                    {/* ── ACCIÓN DEL SISTEMA: sin interventor, solo qué acción ejecuta ── */}
+                    {selected.node_type === "system_action" && (
                         <label>
-                            Estrategia de unión
+                            Acción a ejecutar
                             <select
-                                value={cfgStr(selected, "strategy", "Esperar todas")}
+                                value={cfgStr(selected, "action", "")}
                                 disabled={readOnly}
                                 onFocus={beginEdit}
-                                onChange={(e) => patchConfig(selected.id, { strategy: e.target.value })}
+                                onChange={(e) => patchConfig(selected.id, { action: e.target.value })}
                             >
-                                <option>Esperar todas</option>
-                                <option>Continuar con la primera</option>
-                                <option>Esperar rutas obligatorias</option>
+                                <option value="">Selecciona…</option>
+                                {SYSTEM_ACTION_OPTIONS.map((a) => (
+                                    <option key={a.value} value={a.value}>{a.label}</option>
+                                ))}
                             </select>
                         </label>
                     )}
 
+                    {/* ── DEPENDENCIAS (entrantes) ── */}
                     {selected.node_type !== "start" && (
                         <div className="dependency-editor">
                             <div className="dependency-head">
@@ -331,29 +318,31 @@ const NodeConfigPanel = ({
                                     <h4>Dependencias</h4>
                                     <span>Qué debe terminar antes</span>
                                 </div>
-                                <Badge tone={incomingOf(selected.id).length > 1 ? "info" : "neutral"}>
-                                    {incomingOf(selected.id).length}
+                                <Badge tone={incoming.length > 1 ? "info" : "neutral"}>
+                                    {incoming.length}
                                 </Badge>
                             </div>
 
-                            <label>
-                                Política de activación
-                                <select
-                                    value={activationOf(selected)}
-                                    disabled={readOnly}
-                                    onFocus={beginEdit}
-                                    onChange={(e) => patchConfig(selected.id, { activation: e.target.value })}
-                                >
-                                    <option value="all">Todas las dependencias</option>
-                                    <option value="any">Cualquiera de las dependencias</option>
-                                </select>
-                            </label>
+                            {incoming.length > 1 && (
+                                <label>
+                                    Política de activación
+                                    <select
+                                        value={activationOf(selected)}
+                                        disabled={readOnly}
+                                        onFocus={beginEdit}
+                                        onChange={(e) => patchConfig(selected.id, { activation: e.target.value })}
+                                    >
+                                        <option value="all">Todas las dependencias</option>
+                                        <option value="any">Cualquiera de las dependencias</option>
+                                    </select>
+                                </label>
+                            )}
 
                             <div className="dependency-list">
-                                {incomingOf(selected.id).length === 0 && (
+                                {incoming.length === 0 && (
                                     <p>Este nodo todavía no tiene predecesores.</p>
                                 )}
-                                {incomingOf(selected.id).map((t) => {
+                                {incoming.map((t) => {
                                     const dep = nodes.find((n) => n.id === t.source_node);
                                     return (
                                         <div key={t.id}>
@@ -371,7 +360,7 @@ const NodeConfigPanel = ({
                                 })}
                             </div>
 
-                            {!readOnly && (
+                            {!readOnly && candidateOptions.length > 0 && (
                                 <div className="add-dependency">
                                     <select
                                         value={candidateId ?? ""}
@@ -385,12 +374,91 @@ const NodeConfigPanel = ({
                                 </div>
                             )}
 
+                            {incoming.length > 1 && (
+                                <div className="dependency-note">
+                                    <Icon name="spark" />
+                                    <span>
+                                        {activationOf(selected) === "all"
+                                            ? "Se ejecutará cuando todos los predecesores terminen."
+                                            : "Se ejecutará cuando termine cualquiera de sus predecesores."}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── RUTAS DE SALIDA (donde viven las condiciones) ── */}
+                    {selected.node_type !== "end" && outgoing.length > 1 && (
+                        <div className="dependency-editor">
+                            <div className="dependency-head">
+                                <div>
+                                    <h4>Rutas de salida</h4>
+                                    <span>Cuándo sigue cada camino</span>
+                                </div>
+                                <Badge tone="info">{outgoing.length}</Badge>
+                            </div>
+
+                            <div className="dependency-list">
+                                {outgoing.map((t) => {
+                                    const target = nodes.find((n) => n.id === t.target_node);
+                                    const isRule = t.condition_type === "rule";
+                                    return (
+                                        <div key={t.id} className="route-item">
+                                            <span>
+                                                <Icon name={target ? nodeIcon(target.node_type) : "flow"} size={12} />
+                                                {target?.name ?? "Nodo eliminado"}
+                                            </span>
+
+                                            <select
+                                                value={t.condition_type}
+                                                disabled={readOnly}
+                                                onFocus={beginEdit}
+                                                onChange={(e) => setRouteMode(t, e.target.value as "always" | "rule")}
+                                            >
+                                                <option value="always">Siempre / por defecto</option>
+                                                <option value="rule">Con regla</option>
+                                            </select>
+
+                                            {isRule && (
+                                                <>
+                                                    <select
+                                                        value={ruleValue(t, "field")}
+                                                        disabled={readOnly}
+                                                        onFocus={beginEdit}
+                                                        onChange={(e) => patchRule(t, "field", e.target.value)}
+                                                    >
+                                                        {RULE_FIELDS.map((f) => <option key={f}>{f}</option>)}
+                                                    </select>
+                                                    <div className="field-row">
+                                                        <select
+                                                            value={ruleValue(t, "operator")}
+                                                            disabled={readOnly}
+                                                            onFocus={beginEdit}
+                                                            onChange={(e) => patchRule(t, "operator", e.target.value)}
+                                                        >
+                                                            {RULE_OPERATORS.map((o) => <option key={o}>{o}</option>)}
+                                                        </select>
+                                                        <input
+                                                            placeholder="Valor"
+                                                            value={ruleValue(t, "value")}
+                                                            disabled={readOnly}
+                                                            onFocus={beginEdit}
+                                                            onChange={(e) => patchRule(t, "value", e.target.value)}
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
                             <div className="dependency-note">
                                 <Icon name="spark" />
                                 <span>
-                                    {activationOf(selected) === "all"
-                                        ? "Se ejecutará cuando todos los predecesores terminen."
-                                        : "Se ejecutará cuando termine cualquiera de sus predecesores."}
+                                    Si todas las rutas son “Siempre”, se ejecutan en paralelo. Si alguna tiene
+                                    regla, el flujo elige según el valor y la ruta “Siempre” actúa como alternativa
+                                    por defecto.
                                 </span>
                             </div>
                         </div>
@@ -399,17 +467,16 @@ const NodeConfigPanel = ({
                     {!readOnly &&
                         selected.node_type !== "start" &&
                         selected.node_type !== "end" && (
-                            <div className="config-actions">
+                            <div className="config-actions mt-4!">
                                 <Button variant="danger" onClick={() => removeNode(selected.id)}>
                                     Eliminar nodo
                                 </Button>
                             </div>
-                        )
-                    }
+                        )}
                 </>
             )}
         </aside>
-    )
-}
+    );
+};
 
-export default NodeConfigPanel
+export default NodeConfigPanel;
