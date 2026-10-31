@@ -26,7 +26,7 @@ const Workflows = () => {
     const navigate = useNavigate();
     // ── Filtros y paginación de la lista ─────────────────
     const [search, setSearch] = useState("");
-    const [status, setStatus] = useState<WorkflowStatusFilter>("all");
+    const [status, setStatus] = useState<WorkflowStatusFilter>("active");
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(WORKFLOW_PAGE_SIZES[0]);
 

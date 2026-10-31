@@ -11,6 +11,7 @@ import GraphCanvas from "../components/details/GraphCanvas";
 import NodeConfigPanel from "../components/details/NodeConfigPanel";
 import PanelValidation from "../components/details/PanelValidation";
 import PublishConfirmDialog from "../components/details/PublishConfirmDialog";
+import { useGetIntervenors } from "../../intervenors/hooks/useGetIntervenors";
 
 type Snapshot = { nodes: WorkflowNode[]; transitions: GraphTransition[] };
 type Tone = "success" | "info" | "warning" | "danger" | "neutral";
@@ -382,9 +383,14 @@ const WorkflowBuilder = () => {
         }
         setSimulation((cur) => (cur === null ? 0 : cur >= maxLevel ? null : cur + 1));
     };
-    const simulationLabel =
-        simulation === null ? "Previsualizar" : simulation >= maxLevel ? "Reiniciar" : "Siguiente etapa";
-
+    const simulationLabel = simulation === null ? "Previsualizar" : simulation >= maxLevel ? "Reiniciar" : "Siguiente etapa";
+    const {data:intervenorsData, isLoading:isLoadingIntervenors} = useGetIntervenors({
+        page: 1,
+        pageSize: 100,
+        search: "",
+        isActive: true,
+    })
+    const intervenors = intervenorsData?.data?.results ?? [];
     /* ───────── Retornos tempranos (después de TODOS los hooks) ───────── */
     if (isLoading) return <p>Cargando workflow...</p>;
     if (isError) return <p>Error al cargar el workflow.</p>;
@@ -439,6 +445,8 @@ const WorkflowBuilder = () => {
                     levels={levels}
                     setDependencyCandidate={setDependencyCandidate}
                     removeNode={removeNode}
+                    intervenors={intervenors}
+                    intervenorsLoading={isLoading}
                 />
 
                 {/* PANEL DERECHO */}
@@ -459,6 +467,8 @@ const WorkflowBuilder = () => {
                     setDependencyCandidate={setDependencyCandidate}
                     removeNode={removeNode}
                     updateTransition={updateTransition}
+                    intervenors={intervenors}
+                    intervenorsLoading={isLoadingIntervenors}
                 />
             </div>
 

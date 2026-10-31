@@ -136,3 +136,12 @@ class WorkflowRepository:
         ])
         
         return workflow_version  
+    
+    @staticmethod
+    def save_draft(workflow_id: int, workflow_version_id: int):
+        workflow_version = WorkflowVersion.objects.get(
+            workflow=workflow_id,
+            pk=workflow_version_id
+        )
+        
+        

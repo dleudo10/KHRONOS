@@ -1,7 +1,8 @@
 import Badge, { type Tone } from "../../../../components/ui/Badge";
 import Button from "../../../../components/ui/Button";
 import Icon from "../../../../components/ui/Icon";
-import { INTERVENTOR_OPTIONS, SYSTEM_ACTION_OPTIONS } from "../../types/const";
+import type { Intervenor } from "../../../intervenors/types/intervenor.types";
+import { SYSTEM_ACTION_OPTIONS } from "../../types/const";
 import { nodeIcon, type GraphTransition, type WorkflowNode } from "../../types/workflow.types";
 import { activationOf } from "../../utils/activationOf";
 import { cfgNum } from "../../utils/cfgNum";
@@ -31,6 +32,9 @@ type NodeConfigPanelProps = {
     setDependencyCandidate: React.Dispatch<React.SetStateAction<number | null>>;
     removeNode: (id: number) => void;
     updateTransition: (id: number, patch: Partial<GraphTransition>) => void;
+
+    intervenors: Intervenor[];
+    intervenorsLoading: boolean;
 };
 
 const NodeConfigPanel = ({
@@ -50,6 +54,8 @@ const NodeConfigPanel = ({
     setDependencyCandidate,
     removeNode,
     updateTransition,
+    intervenors,
+    intervenorsLoading,
 }: NodeConfigPanelProps) => {
     const reaches = (from: number, target: number) => {
         const seen = new Set<number>();
@@ -197,36 +203,34 @@ const NodeConfigPanel = ({
                         <>
                             <label>
                                 Interventor
-                                {INTERVENTOR_OPTIONS.length ? (
-                                    <select
-                                        value={selected.interventor_id ?? ""}
-                                        disabled={readOnly}
-                                        onFocus={beginEdit}
-                                        onChange={(e) =>
-                                            patchNode(selected.id, {
-                                                interventor_id: e.target.value ? Number(e.target.value) : null,
-                                            })
-                                        }
-                                    >
-                                        <option value="">Selecciona…</option>
-                                        {INTERVENTOR_OPTIONS.map((i) => (
-                                            <option key={i.id} value={i.id}>{i.name}</option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        placeholder="ID del interventor"
-                                        value={selected.interventor_id ?? ""}
-                                        disabled={readOnly}
-                                        onFocus={beginEdit}
-                                        onChange={(e) =>
-                                            patchNode(selected.id, {
-                                                interventor_id: e.target.value ? Number(e.target.value) : null,
-                                            })
-                                        }
-                                    />
+
+                                <select
+                                    value={selected.interventor_id ?? ""}
+                                    disabled={readOnly || intervenorsLoading}
+                                    onFocus={beginEdit}
+                                    onChange={(e) =>
+                                        patchNode(selected.id, {
+                                            interventor_id: e.target.value
+                                                ? Number(e.target.value)
+                                                : null,
+                                        })
+                                    }
+                                >
+                                    <option value="">
+                                        {intervenorsLoading
+                                            ? "Cargando interventores..."
+                                            : "Selecciona un interventor"}
+                                    </option>
+
+                                    {intervenors.map((intervenor) => (
+                                        <option key={intervenor.id} value={intervenor.id}>
+                                            {intervenor.name} ({intervenor.code})
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {!intervenorsLoading && intervenors.length === 0 && (
+                                    <small>No hay interventores activos disponibles.</small>
                                 )}
                             </label>
                             <div className="field-row">

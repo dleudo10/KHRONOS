@@ -3,10 +3,11 @@ import Badge, { type Tone } from "../../../../components/ui/Badge";
 import Icon from "../../../../components/ui/Icon";
 import { nodeIcon, type GraphTransition, type WorkflowNode } from "../../types/workflow.types";
 import { uniqueCode } from "../../utils/uniqueCode";
-import { INTERVENTOR_OPTIONS, SYSTEM_ACTION_OPTIONS } from "../../types/const";
+import { SYSTEM_ACTION_OPTIONS } from "../../types/const";
 import { cfgStr } from "../../utils/cfgStr";
 import { activationOf } from "../../utils/activationOf";
 import { typeLabelFor } from "../../utils/typeLabelFor";
+import type { Intervenor } from "../../../intervenors/types/intervenor.types";
 
 type DraggingType = {
     id: number;
@@ -38,6 +39,9 @@ type GraphCanvasProps = {
     levels: Map<number, number>;
     setDependencyCandidate: React.Dispatch<React.SetStateAction<number | null>>;
     removeNode: (id: number) => void;
+
+    intervenors: Intervenor[];
+    intervenorsLoading: boolean;
 };
 
 const GraphCanvas = ({
@@ -59,6 +63,9 @@ const GraphCanvas = ({
     levels,
     setDependencyCandidate,
     removeNode,
+
+    intervenors,
+    intervenorsLoading,
 }: GraphCanvasProps) => {
     const [zoom, setZoom] = useState(75);
     const [dragging, setDragging] = useState<DraggingType | null>(null);
@@ -135,8 +142,17 @@ const GraphCanvas = ({
         return lv < simulation ? "complete" : lv === simulation ? "running" : "waiting";
     };
 
-    const interventorName = (id: number | null) =>
-        id === null ? "Sin interventor" : (INTERVENTOR_OPTIONS.find((i) => i.id === id)?.name ?? `Interventor #${id}`);
+    const interventorName = (id: number | null) => {
+        if (id === null) return "Sin interventor";
+
+        if (intervenorsLoading) return "Cargando interventor...";
+
+        return (
+            intervenors.find((intervenor) => intervenor.id === id)?.name ??
+            `Interventor #${id}`
+        );
+    };
+
 
     const systemActionName = (node: WorkflowNode) => {
         const value = cfgStr(node, "action", "");

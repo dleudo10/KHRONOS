@@ -1,4 +1,3 @@
-export const INTERVENTOR_OPTIONS: { id: number; name: string }[] = [];
 export const SYSTEM_ACTION_OPTIONS = [
     { value: "release_bed", label: "Liberar cama" },
     { value: "notify_discharge", label: "Notificar alta" },

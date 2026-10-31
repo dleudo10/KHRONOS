@@ -27,7 +27,7 @@ const initialView = (): IntervenorView =>
 const IntervenorsPage = () => {
     // ── Filtros y paginación de la lista ─────────────────
     const [search, setSearch] = useState("");
-    const [status, setStatus] = useState<IntervenorStatusFilter>("all");
+    const [status, setStatus] = useState<IntervenorStatusFilter>("active");
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(INTERVENOR_PAGE_SIZES[0]);
     const [view, setView] = useState<IntervenorView>(initialView);
